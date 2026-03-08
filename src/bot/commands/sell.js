@@ -14,7 +14,7 @@ module.exports = {
             opt.setName('name').setDescription('ชื่อสินค้า').setRequired(true)
         )
         .addNumberOption((opt) =>
-            opt.setName('price').setDescription('ราคา (บาท)').setRequired(true)
+            opt.setName('price').setDescription('ราคา (USDT)').setRequired(true)
         )
         .addStringOption((opt) =>
             opt

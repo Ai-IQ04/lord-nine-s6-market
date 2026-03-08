@@ -41,7 +41,10 @@ const translations = {
         price: 'ราคา',
         seller: 'ผู้ขาย',
         noItems: 'ไม่พบสินค้า',
-        loading: 'กำลังโหลด...'
+        loading: 'กำลังโหลด...',
+        categoryCharacter: 'ตัวละคร',
+        categoryItem: 'Item',
+        categoryDiamond: 'รับซื้อเพรช'
     },
     en: {
         searchPlaceholder: 'Search items...',
@@ -60,7 +63,10 @@ const translations = {
         price: 'Price',
         seller: 'Seller',
         noItems: 'No items found',
-        loading: 'Loading...'
+        loading: 'Loading...',
+        categoryCharacter: 'Character',
+        categoryItem: 'Item',
+        categoryDiamond: 'Buy Diamonds'
     }
 };
 
@@ -132,7 +138,21 @@ function updateUIText() {
         }
     }
 
-    // Update elements with data-th and data-en attributes
+    // Update page title and meta description
+    const pageTitle = document.getElementById('pageTitle');
+    const metaDescription = document.getElementById('metaDescription');
+
+    if (pageTitle) {
+        const titleText = currentLanguage === 'th' ? pageTitle.getAttribute('data-th') : pageTitle.getAttribute('data-en');
+        document.title = titleText;
+    }
+
+    if (metaDescription) {
+        const descText = currentLanguage === 'th' ? metaDescription.getAttribute('data-th') : metaDescription.getAttribute('data-en');
+        metaDescription.setAttribute('content', descText);
+    }
+
+    // Update elements with data-th and data-en attributes (including category buttons)
     const elements = document.querySelectorAll('[data-th][data-en]');
     elements.forEach(element => {
         const text = currentLanguage === 'th' ? element.getAttribute('data-th') : element.getAttribute('data-en');
@@ -146,6 +166,13 @@ function updateUIText() {
         } else if (element.tagName === 'BUTTON' || element.tagName === 'OPTION') {
             // For buttons and options, update text content
             element.textContent = text;
+
+            // Update data-category for category buttons if needed
+            if (element.classList.contains('filter-btn') && !element.getAttribute('data-category').includes('all')) {
+                const thCategory = element.getAttribute('data-th').replace(/^[^\s]+\s/, ''); // Remove emoji
+                const enCategory = element.getAttribute('data-en').replace(/^[^\s]+\s/, ''); // Remove emoji
+                element.setAttribute('data-category', currentLanguage === 'th' ? thCategory : enCategory);
+            }
         } else if (element.tagName === 'SPAN' && element.parentElement.tagName === 'BUTTON') {
             // For span inside button (buy button)
             element.textContent = text;
