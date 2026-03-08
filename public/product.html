@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="รายละเอียดสินค้า - Lord Nine S6 Market">
+    <title>สินค้า — Lord Nine S6 Market</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .product-page {
+            max-width: 1000px;
+            margin: 100px auto 60px;
+            padding: 0 24px;
+        }
+
+        .product-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            overflow: hidden;
+        }
+
+        .product-image-section {
+            min-height: 450px;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .product-image-section img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            padding: 8px;
+        }
+
+        .product-info {
+            padding: 40px 40px 40px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .product-badge {
+            display: inline-block;
+            padding: 6px 14px;
+            background: var(--bg-glass-strong);
+            border-radius: var(--radius-sm);
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent);
+            width: fit-content;
+        }
+
+        .product-name {
+            font-size: 2rem;
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .product-price {
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .product-desc {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            font-size: 0.95rem;
+        }
+
+        .product-seller-card {
+            padding: 20px;
+            background: var(--bg-glass);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+        }
+
+        .product-seller-card .seller-info {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .product-seller-card .seller-avatar {
+            width: 48px;
+            height: 48px;
+            background: var(--gradient-1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+        }
+
+        .product-seller-card .seller-name-link {
+            font-weight: 600;
+            font-size: 1rem;
+            color: var(--text-primary);
+            transition: var(--transition);
+        }
+
+        .product-seller-card .seller-name-link:hover {
+            color: var(--accent);
+        }
+
+        .product-meta {
+            display: flex;
+            gap: 20px;
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            margin-top: auto;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+            transition: var(--transition);
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+        }
+
+        .not-found {
+            text-align: center;
+            padding: 100px 24px;
+            color: var(--text-secondary);
+        }
+
+        .not-found h2 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .product-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .product-info {
+                padding: 24px;
+            }
+
+            .product-image-section {
+                min-height: 300px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">⚔️</span>
+                <span class="logo-text">Lord Nine S6</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="product-page" id="productPage">
+        <a href="/" class="back-link">← กลับหน้าหลัก / Back to Market</a>
+        <div id="productContent">
+            <div class="not-found" id="productNotFound" style="display:none;">
+                <h2>ไม่พบสินค้า / Item Not Found</h2>
+                <p>สินค้าที่ค้นหาไม่มีอยู่ในระบบ / The item doesn't exist</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p><strong>Lord Nine S6 Market</strong> &bull; Powered by Discord Bot &bull; Real-time</p>
+        </div>
+    </footer>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const productId = params.get('id');
+
+        if (productId) {
+            fetch(`/api/listings/${productId}`)
+                .then(r => r.json())
+                .then(json => {
+                    if (json.success) {
+                        const item = json.data;
+                        document.title = `${item.item_name} — Lord Nine S6 Market`;
+                        document.getElementById('productContent').innerHTML = `
+              <div class="product-layout">
+                <div class="product-image-section">
+                  ${item.image_url
+                                ? `<img src="${item.image_url}" alt="${item.item_name}">`
+                                : `<div style="font-size:5rem;">${getCategoryEmoji(item.category)}</div>`
+                            }
+                </div>
+                <div class="product-info">
+                  <span class="product-badge">${item.category}</span>
+                  <h1 class="product-name">${item.item_name}</h1>
+                  <p class="product-price">฿${Number(item.price).toLocaleString()}</p>
+                  <p class="product-desc">${item.description || 'ไม่มีคำอธิบาย / No description'}</p>
+                  <div class="product-seller-card">
+                    <div class="seller-info">
+                      <div class="seller-avatar">${(item.seller_name || '?')[0].toUpperCase()}</div>
+                      <div>
+                        <a class="seller-name-link" href="seller.html?id=${item.seller_id}">${item.seller_name}</a>
+                        <div style="font-size:0.8rem;color:var(--text-tertiary);margin-top:2px;">ดูโปรไฟล์ / View profile →</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="product-meta">
+                    <span>📅 ${new Date(item.timestamp).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                    <span>🆔 ${item.id}</span>
+                  </div>
+                </div>
+              </div>
+            `;
+                    } else {
+                        document.getElementById('productNotFound').style.display = 'block';
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('productNotFound').style.display = 'block';
+                });
+        } else {
+            document.getElementById('productNotFound').style.display = 'block';
+        }
+
+        function getCategoryEmoji(cat) {
+            return { 'ตัวละคร': '🧙', 'Item': '⚔️', 'รับซื้อเพรช': '💎' }[cat] || '📦';
+        }
+    </script>
+</body>
+
+</html>

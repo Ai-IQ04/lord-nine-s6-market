@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="โปรไฟล์ผู้ขาย - Lord Nine S6 Market">
+    <title>ผู้ขาย — Lord Nine S6 Market</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .seller-page {
+            max-width: 1000px;
+            margin: 100px auto 60px;
+            padding: 0 24px;
+        }
+
+        .seller-header {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            padding: 32px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            margin-bottom: 40px;
+        }
+
+        .seller-avatar-lg {
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .seller-header-info h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .seller-header-stats {
+            display: flex;
+            gap: 24px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .seller-header-stats strong {
+            color: var(--text-primary);
+        }
+
+        .seller-section-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .seller-listings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 48px;
+        }
+
+        .review-card {
+            padding: 20px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .review-author {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .review-stars {
+            color: #f59e0b;
+            font-size: 0.9rem;
+        }
+
+        .review-comment {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.6;
+        }
+
+        .review-date {
+            font-size: 0.75rem;
+            color: var(--text-tertiary);
+            margin-top: 8px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+            transition: var(--transition);
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+        }
+
+        .empty-section {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 768px) {
+            .seller-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .seller-header-stats {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <span class="logo-icon">⚔️</span>
+                <span class="logo-text">Lord Nine S6</span>
+            </a>
+        </div>
+    </nav>
+
+    <div class="seller-page">
+        <a href="/" class="back-link">← กลับหน้าหลัก / Back to Market</a>
+        <div id="sellerContent">
+            <div class="empty-section" id="sellerNotFound" style="display:none;">
+                <h2 style="font-size:1.5rem;color:var(--text-primary);margin-bottom:8px;">ไม่พบผู้ขาย</h2>
+                <p>ผู้ขายที่ค้นหาไม่มีอยู่ในระบบ</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <p><strong>Lord Nine S6 Market</strong> &bull; Powered by Discord Bot &bull; Real-time</p>
+        </div>
+    </footer>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const sellerId = params.get('id');
+
+        if (sellerId) {
+            fetch(`/api/sellers/${sellerId}`)
+                .then(r => r.json())
+                .then(json => {
+                    if (json.success) {
+                        const s = json.data;
+                        document.title = `${s.seller_name} — Lord Nine S6 Market`;
+
+                        const stars = s.rating > 0 ? '⭐'.repeat(Math.round(s.rating)) + ` (${s.rating}/5)` : 'ยังไม่มีคะแนน';
+
+                        let listingsHtml = '';
+                        if (s.listings && s.listings.length > 0) {
+                            listingsHtml = s.listings.map(item => `
+                <a href="product.html?id=${item.id}" class="product-card" style="text-decoration:none;">
+                  <div class="card-image">
+                    ${item.image_url
+                                    ? `<img src="${item.image_url}" alt="${item.item_name}" loading="lazy">`
+                                    : `<div class="card-image-placeholder">${getCategoryEmoji(item.category)}</div>`
+                                }
+                    <span class="card-category">${item.category}</span>
+                  </div>
+                  <div class="card-body">
+                    <h3 class="card-name">${item.item_name}</h3>
+                    <p class="card-description">${item.description || 'ไม่มีคำอธิบาย / No description'}</p>
+                    <div class="card-footer">
+                      <span class="card-price">฿${Number(item.price).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </a>
+              `).join('');
+                        } else {
+                            listingsHtml = '<div class="empty-section">ยังไม่มีสินค้า / No items yet</div>';
+                        }
+
+                        let reviewsHtml = '';
+                        if (s.reviews && s.reviews.length > 0) {
+                            reviewsHtml = s.reviews.map(r => `
+                <div class="review-card">
+                  <div class="review-header">
+                    <span class="review-author">👤 ${r.buyer_name || 'Anonymous'}</span>
+                    <span class="review-stars">${'⭐'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</span>
+                  </div>
+                  <p class="review-comment">${r.comment || 'ไม่มีความคิดเห็น'}</p>
+                  <p class="review-date">${new Date(r.timestamp).toLocaleDateString('th-TH')}</p>
+                </div>
+              `).join('');
+                        } else {
+                            reviewsHtml = '<div class="empty-section">ยังไม่มีรีวิว / No reviews yet</div>';
+                        }
+
+                        document.getElementById('sellerContent').innerHTML = `
+              <div class="seller-header">
+                <div class="seller-avatar-lg">${(s.seller_name || '?')[0].toUpperCase()}</div>
+                <div class="seller-header-info">
+                  <h1>${s.seller_name}</h1>
+                  <div class="seller-header-stats">
+                    <span>📦 <strong>${s.total_listings || 0}</strong> สินค้า / Items</span>
+                    <span>⭐ <strong>${stars}</strong></span>
+                    <span>📝 <strong>${s.total_ratings || 0}</strong> รีวิว / Reviews</span>
+                  </div>
+                </div>
+              </div>
+
+              <h2 class="seller-section-title">📦 สินค้า / Items</h2>
+              <div class="seller-listings-grid">${listingsHtml}</div>
+
+              <h2 class="seller-section-title">⭐ รีวิว / Reviews</h2>
+              <div>${reviewsHtml}</div>
+            `;
+                    } else {
+                        document.getElementById('sellerNotFound').style.display = 'block';
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('sellerNotFound').style.display = 'block';
+                });
+        } else {
+            document.getElementById('sellerNotFound').style.display = 'block';
+        }
+
+        function getCategoryEmoji(cat) {
+            return { 'ตัวละคร': '🧙', 'Item': '⚔️', 'รับซื้อเพรช': '💎' }[cat] || '📦';
+        }
+    </script>
+</body>
+
+</html>

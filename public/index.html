@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Lord Nine S6 Market - ตลาดซื้อขายไอเทม Real-time | Buy & Sell Items via Discord">
+  <title>Lord Nine S6 Market — ตลาดซื้อขาย Real-time</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <!-- ===== NAVBAR ===== -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="nav-logo">
+        <span class="logo-icon">⚔️</span>
+        <span class="logo-text">Lord Nine S6</span>
+      </a>
+      <div class="nav-search">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8" />
+          <path d="m21 21-4.35-4.35" />
+        </svg>
+        <input type="text" id="searchInput" placeholder="ค้นหาสินค้า... / Search items..." autocomplete="off">
+      </div>
+      <div class="nav-actions">
+        <span class="live-badge" id="liveBadge">
+          <span class="live-dot"></span> LIVE
+        </span>
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== HERO SECTION ===== -->
+  <section class="hero" id="hero">
+    <div class="hero-bg">
+      <div class="hero-gradient"></div>
+      <div class="hero-particles" id="heroParticles"></div>
+    </div>
+    <div class="hero-content">
+      <h1 class="hero-title">
+        <span class="hero-title-line">Lord Nine S6</span>
+        <span class="hero-title-line gradient-text">Market</span>
+      </h1>
+      <p class="hero-subtitle">ซื้อขายตัวละคร ไอเทม และเพรช ผ่าน Discord — Real-time<br>Buy & Sell Characters, Items &
+        Diamonds via Discord</p>
+      <div class="hero-stats" id="heroStats">
+        <div class="stat-item">
+          <span class="stat-value" id="totalListings">0</span>
+          <span class="stat-label">สินค้า / Items</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value" id="totalSellers">0</span>
+          <span class="stat-label">ผู้ขาย / Sellers</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-value" id="totalCategories">0</span>
+          <span class="stat-label">หมวดหมู่ / Categories</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FEATURED SECTION ===== -->
+  <section class="section featured-section" id="featuredSection" style="display:none;">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="title-icon">🔥</span> Featured / สินค้าแนะนำ
+        </h2>
+        <p class="section-desc">สินค้าแนะนำยอดนิยม / Top Picks</p>
+      </div>
+      <div class="featured-carousel" id="featuredCarousel">
+        <!-- Dynamic featured items -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MAIN MARKETPLACE ===== -->
+  <section class="section marketplace-section" id="marketplaceSection">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">
+          <span class="title-icon">🛒</span> สินค้าทั้งหมด / All Items
+        </h2>
+      </div>
+
+      <!-- Filters Bar -->
+      <div class="filters-bar" id="filtersBar">
+        <div class="filter-categories" id="filterCategories">
+          <button class="filter-btn active" data-category="all">ทั้งหมด / All</button>
+          <button class="filter-btn" data-category="ตัวละคร">🧙 ตัวละคร</button>
+          <button class="filter-btn" data-category="Item">⚔️ Item</button>
+          <button class="filter-btn" data-category="รับซื้อเพรช">💎 รับซื้อเพรช</button>
+        </div>
+        <div class="filter-sort">
+          <label for="sortSelect" class="sort-label">เรียง / Sort:</label>
+          <select id="sortSelect" class="sort-select">
+            <option value="newest">ใหม่ล่าสุด / Newest</option>
+            <option value="price_asc">ราคา น้อย→มาก / Low→High</option>
+            <option value="price_desc">ราคา มาก→น้อย / High→Low</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="products-grid" id="productsGrid">
+        <!-- Dynamic product cards -->
+      </div>
+
+      <!-- Empty State -->
+      <div class="empty-state" id="emptyState" style="display:none;">
+        <div class="empty-icon">📭</div>
+        <h3>ยังไม่มีสินค้า / No items yet</h3>
+        <p>ใช้คำสั่ง <code>/sell</code> ใน Discord เพื่อลงขายสินค้า!<br>Use <code>/sell</code> in Discord to list your
+          items!</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PRODUCT MODAL ===== -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal-content">
+      <button class="modal-close" id="modalClose">&times;</button>
+      <div class="modal-body">
+        <div class="modal-image-wrap">
+          <img id="modalImage" src="" alt="Product Image">
+        </div>
+        <div class="modal-details">
+          <span class="modal-category" id="modalCategory"></span>
+          <h2 class="modal-title" id="modalTitle"></h2>
+          <p class="modal-price" id="modalPrice"></p>
+          <p class="modal-description" id="modalDescription"></p>
+          <div class="modal-seller">
+            <div class="seller-info">
+              <span class="seller-avatar" id="modalSellerAvatar"></span>
+              <div>
+                <a class="seller-name" id="modalSellerName" href="#"></a>
+                <span class="seller-rating" id="modalSellerRating"></span>
+              </div>
+            </div>
+          </div>
+          <div class="modal-buy-section">
+            <button class="btn-buy" id="modalBuyBtn" onclick="buyItem()">
+              🛒 ซื้อสินค้านี้ / Buy — เปิดแชทกับผู้ขาย
+            </button>
+          </div>
+          <div class="modal-meta">
+            <span id="modalDate"></span>
+            <span id="modalId"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TOAST NOTIFICATION ===== -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="container">
+      <p><strong>Lord Nine S6 Market</strong> &bull; Powered by Discord Bot &bull; Real-time</p>
+    </div>
+  </footer>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>

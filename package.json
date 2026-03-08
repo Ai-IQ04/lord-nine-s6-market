@@ -1,0 +1,26 @@
+{
+    "name": "discord-marketplace-realtime",
+    "version": "1.0.0",
+    "description": "Lord Nine S6 Market — Discord Marketplace with realtime web frontend",
+    "main": "src/index.js",
+    "scripts": {
+        "start": "node src/index.js",
+        "start:api": "node src/api/server.js",
+        "start:bot": "node src/bot/index.js",
+        "deploy-commands": "node src/bot/deploy-commands.js"
+    },
+    "dependencies": {
+        "axios": "^1.6.5",
+        "cors": "^2.8.5",
+        "discord.js": "^14.14.1",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "form-data": "^4.0.0",
+        "google-auth-library": "^9.4.1",
+        "google-spreadsheet": "^4.1.1",
+        "multer": "^1.4.5-lts.1",
+        "socket.io": "^4.7.4",
+        "socket.io-client": "^4.7.4",
+        "uuid": "^9.0.0"
+    }
+}
