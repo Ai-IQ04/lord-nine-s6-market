@@ -37,7 +37,10 @@ app.use('/uploads', express.static(path.join(__dirname, '..', '..', 'uploads')))
 // Helper function to convert image URLs to absolute URLs
 const getFullImageUrl = (imageUrl) => {
     if (!imageUrl) return '';
-    if (imageUrl.startsWith('http')) return imageUrl;
+    // Don't convert data URLs (base64) or already absolute URLs
+    if (imageUrl.startsWith('http') || imageUrl.startsWith('data:')) {
+        return imageUrl;
+    }
 
     const baseUrl = process.env.API_URL || `http://localhost:${PORT}`;
     return `${baseUrl}${imageUrl}`;
@@ -149,7 +152,15 @@ app.post('/api/listings', upload.single('image'), (req, res) => {
 
         let image_url = req.body.image_url || '';
         if (req.file) {
-            image_url = `/uploads/${req.file.filename}`;
+            if (process.env.NODE_ENV === 'production' && req.file.buffer) {
+                // บน production: encode เป็น base64
+                const mimeType = req.file.mimetype;
+                const base64Image = req.file.buffer.toString('base64');
+                image_url = `data:${mimeType};base64,${base64Image}`;
+            } else {
+                // บน development: ใช้ file path
+                image_url = `/uploads/${req.file.filename}`;
+            }
         }
 
         const listing = {

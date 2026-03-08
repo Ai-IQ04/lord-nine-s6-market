@@ -10,15 +10,23 @@ if (!fs.existsSync(UPLOAD_DIR)) {
     fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
 
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        cb(null, UPLOAD_DIR);
-    },
-    filename: (req, file, cb) => {
-        const ext = path.extname(file.originalname).toLowerCase();
-        cb(null, `${uuidv4()}${ext}`);
-    },
-});
+// ใช้ disk storage สำหรับ local development, memory storage สำหรับ production
+let storage;
+if (process.env.NODE_ENV === 'production') {
+    // บน Render ใช้ memory storage และจะ encode เป็น base64
+    storage = multer.memoryStorage();
+} else {
+    // บน local ใช้ disk storage
+    storage = multer.diskStorage({
+        destination: (req, file, cb) => {
+            cb(null, UPLOAD_DIR);
+        },
+        filename: (req, file, cb) => {
+            const ext = path.extname(file.originalname).toLowerCase();
+            cb(null, `${uuidv4()}${ext}`);
+        },
+    });
+}
 
 const fileFilter = (req, file, cb) => {
     const allowed = ['.jpg', '.jpeg', '.png', '.webp'];
