@@ -18,6 +18,51 @@ const filterCategories = document.getElementById('filterCategories');
 const productModal = document.getElementById('productModal');
 const modalClose = document.getElementById('modalClose');
 const toastContainer = document.getElementById('toastContainer');
+const languageSelector = document.getElementById('languageSelector');
+const languageButtons = document.querySelectorAll('.language-btn');
+
+// ===== LANGUAGE SYSTEM =====
+let currentLanguage = 'th'; // Default: Thai
+const translations = {
+    th: {
+        searchPlaceholder: 'ค้นหาสินค้า...',
+        allItems: 'ทั้งหมด',
+        featured: 'สินค้าแนะนำ',
+        topPicks: 'สินค้าแนะนำยอดนิยม',
+        items: 'สินค้า',
+        sellers: 'ผู้ขาย',
+        categories: 'หมวดหมู่',
+        sortNewest: 'ใหม่ล่าสุด',
+        sortPriceAsc: 'ราคาต่ำสุด',
+        sortPriceDesc: 'ราคาสูงสุด',
+        buyNow: 'ซื้อทันที',
+        contactSeller: 'ติดต่อผู้ขาย',
+        description: 'รายละเอียด',
+        price: 'ราคา',
+        seller: 'ผู้ขาย',
+        noItems: 'ไม่พบสินค้า',
+        loading: 'กำลังโหลด...'
+    },
+    en: {
+        searchPlaceholder: 'Search items...',
+        allItems: 'All',
+        featured: 'Featured',
+        topPicks: 'Top Picks',
+        items: 'Items',
+        sellers: 'Sellers',
+        categories: 'Categories',
+        sortNewest: 'Newest',
+        sortPriceAsc: 'Price: Low to High',
+        sortPriceDesc: 'Price: High to Low',
+        buyNow: 'Buy Now',
+        contactSeller: 'Contact Seller',
+        description: 'Description',
+        price: 'Price',
+        seller: 'Seller',
+        noItems: 'No items found',
+        loading: 'Loading...'
+    }
+};
 
 // Stats
 const totalListingsEl = document.getElementById('totalListings');
@@ -26,11 +71,95 @@ const totalCategoriesEl = document.getElementById('totalCategories');
 
 // ===== INITIALIZE =====
 document.addEventListener('DOMContentLoaded', () => {
+    initLanguageSystem();
     fetchListings();
     setupEventListeners();
     connectSocket();
     createHeroParticles();
 });
+
+// ===== LANGUAGE FUNCTIONS =====
+function initLanguageSystem() {
+    // Load saved language from localStorage
+    const savedLang = localStorage.getItem('marketplace_lang') || 'th';
+    setLanguage(savedLang);
+
+    // Add event listeners to language buttons
+    if (languageButtons) {
+        languageButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const lang = btn.getAttribute('data-lang');
+                setLanguage(lang);
+            });
+        });
+    }
+}
+
+function setLanguage(lang) {
+    currentLanguage = lang;
+    localStorage.setItem('marketplace_lang', lang);
+
+    // Update active button
+    if (languageButtons) {
+        languageButtons.forEach(btn => {
+            if (btn.getAttribute('data-lang') === lang) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    // Update UI text
+    updateUIText();
+}
+
+function updateUIText() {
+    const t = translations[currentLanguage];
+
+    // Update search placeholder
+    if (searchInput) {
+        searchInput.placeholder = t.searchPlaceholder;
+    }
+
+    // Update sort options
+    if (sortSelect) {
+        const options = sortSelect.options;
+        if (options.length >= 3) {
+            options[0].text = t.sortNewest;
+            options[1].text = t.sortPriceAsc;
+            options[2].text = t.sortPriceDesc;
+        }
+    }
+
+    // Update stats labels
+    const statLabels = document.querySelectorAll('.stat-label');
+    if (statLabels.length >= 3) {
+        statLabels[0].textContent = `${t.items} / Items`;
+        statLabels[1].textContent = `${t.sellers} / Sellers`;
+        statLabels[2].textContent = `${t.categories} / Categories`;
+    }
+
+    // Update section titles
+    const featuredTitle = document.querySelector('.featured-section .section-title');
+    if (featuredTitle) {
+        featuredTitle.innerHTML = `<span class="title-icon">🔥</span> ${t.featured} / ${t.featured}`;
+    }
+
+    const featuredDesc = document.querySelector('.featured-section .section-desc');
+    if (featuredDesc) {
+        featuredDesc.textContent = t.topPicks;
+    }
+
+    // Update filter buttons
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    filterButtons.forEach(btn => {
+        const category = btn.getAttribute('data-category');
+        if (category === 'all') {
+            btn.textContent = `${t.allItems} / All`;
+        }
+    });
+}
 
 // ===== FETCH LISTINGS =====
 async function fetchListings() {
