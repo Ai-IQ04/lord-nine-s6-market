@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: discord-marketplace
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: DISCORD_CLIENT_ID
+        sync: false
+      - key: DISCORD_GUILD_ID
+        sync: false
+      - key: DISCORD_MARKETPLACE_CHANNEL
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://discord-marketplace.onrender.com,http://localhost:3000
+    healthCheckPath: /health
+    autoDeploy: true

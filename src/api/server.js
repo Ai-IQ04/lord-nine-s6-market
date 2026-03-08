@@ -3,10 +3,18 @@ const express = require('express');
 const http = require('http');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 const { v4: uuidv4 } = require('uuid');
 const db = require('../db/fallback');
 const { initSocket, emitEvent } = require('./socket');
 const { upload } = require('./upload');
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(__dirname, '..', '..', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log(`📁 Created uploads directory: ${uploadsDir}`);
+}
 
 const app = express();
 const server = http.createServer(app);
@@ -15,7 +23,13 @@ const PORT = process.env.PORT || 3000;
 app.get('/health', (req, res) => res.send('OK'));
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production'
+        ? (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*')
+        : '*',
+    credentials: true
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', '..', 'public')));
 app.use('/uploads', express.static(path.join(__dirname, '..', '..', 'uploads')));
@@ -297,9 +311,9 @@ app.post('/api/buy/:id', async (req, res) => {
 
 // ==================== START SERVER ====================
 
-server.listen(PORT, () => {
-    console.log(`🚀 Marketplace API running at http://localhost:${PORT}`);
-    console.log(`📂 Frontend at http://localhost:${PORT}`);
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Marketplace API running on port ${PORT}`);
+    console.log(`📂 Frontend available`);
 });
 
 module.exports = { app, server, setDiscordClient };

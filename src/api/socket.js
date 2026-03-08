@@ -4,9 +4,13 @@ function initSocket(server) {
     const { Server } = require('socket.io');
     io = new Server(server, {
         cors: {
-            origin: '*',
+            origin: process.env.NODE_ENV === 'production'
+                ? (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*')
+                : '*',
             methods: ['GET', 'POST'],
+            credentials: true
         },
+        transports: ['websocket', 'polling'], // Support both transports
     });
 
     io.on('connection', (socket) => {
