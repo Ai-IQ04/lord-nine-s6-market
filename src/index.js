@@ -120,7 +120,7 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 const PORT = process.env.PORT || 3000;
-const API_URL = `http://localhost:${PORT}`; // บอทคุยกับ API ภายในเครื่องเสมอ (fastest)
+const API_URL = `http://127.0.0.1:${PORT}`; // บอทคุยกับ API ภายในเครื่องเสมอ (fastest)
 
 // Login Discord Bot
 const token = process.env.DISCORD_TOKEN;

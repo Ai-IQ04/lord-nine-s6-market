@@ -2,7 +2,7 @@ const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
 const axios = require('axios');
 
 const PORT = process.env.PORT || 3000;
-const API_URL = `http://localhost:${PORT}`;
+const API_URL = `http://127.0.0.1:${PORT}`;
 
 module.exports = {
     data: new SlashCommandBuilder()

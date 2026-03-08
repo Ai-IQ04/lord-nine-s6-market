@@ -34,5 +34,17 @@
     "seller_id": "573192230559416321",
     "featured": false,
     "timestamp": "2026-03-08T05:17:45.212Z"
+  },
+  {
+    "id": "3bba132a-134e-455f-9a11-d0a1e3675478",
+    "item_name": "test",
+    "price": 10,
+    "category": "รับซื้อเพรช",
+    "description": "",
+    "image_url": "/uploads/515856c3-5b36-4395-9043-9b6f144e95d7.png",
+    "seller_name": "BTC - ไข่ตุ๋u",
+    "seller_id": "573192230559416321",
+    "featured": false,
+    "timestamp": "2026-03-08T07:25:41.117Z"
   }
 ]
