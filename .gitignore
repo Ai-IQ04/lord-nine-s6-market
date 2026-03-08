@@ -7,9 +7,6 @@ node_modules/
 # Uploaded images (local only)
 uploads/
 
-# Data files (local only)
-data/
-
 # OS files
 .DS_Store
 Thumbs.db
