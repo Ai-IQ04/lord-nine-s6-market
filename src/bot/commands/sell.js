@@ -3,7 +3,8 @@ const axios = require('axios');
 const FormData = require('form-data');
 const { checkScam } = require('../utils/antiScam');
 
-const API_URL = process.env.API_URL || 'http://localhost:3000';
+const PORT = process.env.PORT || 3000;
+const API_URL = process.env.API_URL || `http://localhost:${PORT}`;
 
 module.exports = {
     data: new SlashCommandBuilder()

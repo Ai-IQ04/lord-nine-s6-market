@@ -254,7 +254,7 @@ app.post('/api/buy/:id', async (req, res) => {
             if (listing.image_url) {
                 const fullImageUrl = listing.image_url.startsWith('http')
                     ? listing.image_url
-                    : `${process.env.API_URL || 'http://localhost:3000'}${listing.image_url}`;
+                    : `${process.env.API_URL || `http://localhost:${PORT}`}${listing.image_url}`;
                 embed.setThumbnail(fullImageUrl);
             }
 
