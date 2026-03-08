@@ -11,7 +11,6 @@ const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
     ],
 });
 
@@ -71,25 +70,37 @@ client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
     const command = client.commands.get(interaction.commandName);
-    if (!command) return;
+    if (!command) {
+        console.warn(`⚠️ Command not found: ${interaction.commandName}`);
+        return;
+    }
 
     try {
-        // Defer reply for all slash commands
-        await interaction.deferReply({ ephemeral: true });
+        console.log(`📡 Executing command: /${interaction.commandName} by ${interaction.user.tag}`);
         await command.execute(interaction);
     } catch (error) {
         console.error(`❌ Error executing /${interaction.commandName}:`, error);
-        const reply = {
-            content: '❌ เกิดข้อผิดพลาดในการดำเนินการคำสั่ง',
+
+        // ส่งข้อความแจ้งเตือนข้อผิดพลาด (ถ้ายังไม่มีการตอบกลับ/defer)
+        const errorMessage = {
+            content: '❌ เกิดข้อผิดพลาดในการดำเนินการคำสั่ง กรุณาลองใหม่ภายหลัง',
             ephemeral: true,
         };
-        if (interaction.replied || interaction.deferred) {
-            await interaction.followUp(reply);
-        } else {
-            await interaction.reply(reply);
+
+        try {
+            if (interaction.deferred || interaction.replied) {
+                await interaction.editReply(errorMessage);
+            } else {
+                await interaction.reply(errorMessage);
+            }
+        } catch (err) {
+            console.error('Failed to send error reply:', err.message);
         }
     }
 });
+
+const PORT = process.env.PORT || 3000;
+const API_URL = `http://localhost:${PORT}`; // บอทคุยกับ API ภายในเครื่องเสมอ (fastest)
 
 // Login Discord Bot
 const token = process.env.DISCORD_TOKEN;

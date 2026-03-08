@@ -4,7 +4,7 @@ const FormData = require('form-data');
 const { checkScam } = require('../utils/antiScam');
 
 const PORT = process.env.PORT || 3000;
-const API_URL = process.env.API_URL || `http://localhost:${PORT}`;
+const API_URL = `http://localhost:${PORT}`; // บอทคุยกับ API ภายในเครื่องเสมอ (fastest)
 
 module.exports = {
     data: new SlashCommandBuilder()
