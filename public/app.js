@@ -132,33 +132,34 @@ function updateUIText() {
         }
     }
 
-    // Update stats labels
-    const statLabels = document.querySelectorAll('.stat-label');
-    if (statLabels.length >= 3) {
-        statLabels[0].textContent = `${t.items} / Items`;
-        statLabels[1].textContent = `${t.sellers} / Sellers`;
-        statLabels[2].textContent = `${t.categories} / Categories`;
-    }
+    // Update elements with data-th and data-en attributes
+    const elements = document.querySelectorAll('[data-th][data-en]');
+    elements.forEach(element => {
+        const text = currentLanguage === 'th' ? element.getAttribute('data-th') : element.getAttribute('data-en');
 
-    // Update section titles
-    const featuredTitle = document.querySelector('.featured-section .section-title');
-    if (featuredTitle) {
-        featuredTitle.innerHTML = `<span class="title-icon">🔥</span> ${t.featured} / ${t.featured}`;
-    }
-
-    const featuredDesc = document.querySelector('.featured-section .section-desc');
-    if (featuredDesc) {
-        featuredDesc.textContent = t.topPicks;
-    }
-
-    // Update filter buttons
-    const filterButtons = document.querySelectorAll('.filter-btn');
-    filterButtons.forEach(btn => {
-        const category = btn.getAttribute('data-category');
-        if (category === 'all') {
-            btn.textContent = `${t.allItems} / All`;
+        // Handle innerHTML for elements that contain HTML
+        if (element.tagName === 'P' && element.innerHTML.includes('<code>')) {
+            // For paragraphs with code tags, preserve HTML structure
+            const thText = element.getAttribute('data-th');
+            const enText = element.getAttribute('data-en');
+            element.innerHTML = currentLanguage === 'th' ? thText : enText;
+        } else if (element.tagName === 'BUTTON' || element.tagName === 'OPTION') {
+            // For buttons and options, update text content
+            element.textContent = text;
+        } else if (element.tagName === 'SPAN' && element.parentElement.tagName === 'BUTTON') {
+            // For span inside button (buy button)
+            element.textContent = text;
+        } else {
+            // For other elements
+            element.textContent = text;
         }
     });
+
+    // Update sort label (special case)
+    const sortLabel = document.querySelector('.sort-label');
+    if (sortLabel) {
+        sortLabel.textContent = currentLanguage === 'th' ? 'เรียง:' : 'Sort:';
+    }
 }
 
 // ===== FETCH LISTINGS =====
