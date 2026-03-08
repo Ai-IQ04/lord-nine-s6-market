@@ -11,6 +11,7 @@ const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
     ],
 });
 
@@ -73,6 +74,8 @@ client.on('interactionCreate', async (interaction) => {
     if (!command) return;
 
     try {
+        // Defer reply for all slash commands
+        await interaction.deferReply({ ephemeral: true });
         await command.execute(interaction);
     } catch (error) {
         console.error(`❌ Error executing /${interaction.commandName}:`, error);

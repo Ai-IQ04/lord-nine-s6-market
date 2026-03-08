@@ -14,10 +14,9 @@ module.exports = {
 
     async execute(interaction) {
         await interaction.deferReply({ ephemeral: true });
-
-        const itemId = interaction.options.getString('id');
-
         try {
+            const itemId = interaction.options.getString('id');
+
             // ตรวจสอบว่าเป็นเจ้าของสินค้า
             const itemRes = await axios.get(`${API_URL}/api/listings/${itemId}`);
             const item = itemRes.data.data;

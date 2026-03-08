@@ -11,7 +11,6 @@ module.exports = {
 
     async execute(interaction) {
         await interaction.deferReply({ ephemeral: true });
-
         try {
             const res = await axios.get(`${API_URL}/api/listings`);
             const myItems = res.data.data.filter((l) => l.seller_id === interaction.user.id);
