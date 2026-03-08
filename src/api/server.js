@@ -34,6 +34,39 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, '..', '..', 'public')));
 app.use('/uploads', express.static(path.join(__dirname, '..', '..', 'uploads')));
 
+// Helper function to convert image URLs to absolute URLs
+const getFullImageUrl = (imageUrl) => {
+    if (!imageUrl) return '';
+    if (imageUrl.startsWith('http')) return imageUrl;
+
+    const baseUrl = process.env.API_URL || `http://localhost:${PORT}`;
+    return `${baseUrl}${imageUrl}`;
+};
+
+// Middleware to add full image URLs to API responses
+app.use((req, res, next) => {
+    const originalJson = res.json;
+    res.json = function (data) {
+        if (data && data.success && Array.isArray(data.data)) {
+            // Process listings array
+            data.data = data.data.map(item => {
+                if (item.image_url) {
+                    return {
+                        ...item,
+                        image_url: getFullImageUrl(item.image_url)
+                    };
+                }
+                return item;
+            });
+        } else if (data && data.success && data.data && data.data.image_url) {
+            // Process single listing
+            data.data.image_url = getFullImageUrl(data.data.image_url);
+        }
+        return originalJson.call(this, data);
+    };
+    next();
+});
+
 // Initialize Socket.io
 initSocket(server);
 
