@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workflow Viewer — RedDevil / BlueDevil Guild App</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700;800&family=Sarabun:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#080c14;
+    --card:#0d1420;
+    --card-2:#0f1826;
+    --card-3:#111c2e;
+    --border:#1c2740;
+    --border-soft:#151f34;
+    --red:#f43f5e;
+    --red-soft:#fb7185;
+    --blue:#0ea5e9;
+    --blue-soft:#38bdf8;
+    --indigo:#818cf8;
+    --amber:#fbbf24;
+    --emerald:#34d399;
+    --text:#e6eaf3;
+    --sub:#8a95ac;
+    --sub-2:#5c6883;
+    --mono:'JetBrains Mono', monospace;
+    --sidebar-w:260px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(at 15% 0%, rgba(244,63,94,.10) 0px, transparent 45%),
+      radial-gradient(at 85% 0%, rgba(14,165,233,.10) 0px, transparent 45%),
+      radial-gradient(at 50% 100%, rgba(129,140,248,.06) 0px, transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Sarabun','Prompt',sans-serif;
+    line-height:1.65;
+  }
+  h1,h2,h3,h4{font-family:'Prompt',sans-serif; margin:0;}
+  .mono{font-family:var(--mono);}
+  button{font-family:inherit; cursor:pointer;}
+  ::-webkit-scrollbar{width:8px; height:8px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:#1e293b; border-radius:99px;}
+  ::-webkit-scrollbar-thumb:hover{background:#334155;}
+
+  /* ============ LAYOUT ============ */
+  .app{display:flex; min-height:100vh;}
+
+  /* ---- Sidebar ---- */
+  .sidebar{
+    width:var(--sidebar-w); flex-shrink:0;
+    position:sticky; top:0; height:100vh; overflow-y:auto;
+    border-right:1px solid var(--border); background:rgba(10,14,22,.7); backdrop-filter:blur(10px);
+    padding:22px 16px 30px; z-index:40;
+  }
+  .brand{display:flex; align-items:center; gap:10px; padding:4px 6px 20px; border-bottom:1px solid var(--border-soft); margin-bottom:16px;}
+  .brand .logo{
+    width:34px; height:34px; border-radius:10px; flex-shrink:0;
+    background:linear-gradient(135deg, var(--red), var(--blue));
+    display:flex; align-items:center; justify-content:center; font-size:16px;
+  }
+  .brand .t1{font-weight:800; font-size:13.5px; line-height:1.2;}
+  .brand .t2{font-family:var(--mono); font-size:9.5px; color:var(--sub-2); letter-spacing:.06em;}
+
+  .searchbox{position:relative; margin-bottom:18px;}
+  .searchbox input{
+    width:100%; background:var(--card); border:1px solid var(--border); border-radius:10px;
+    padding:9px 12px 9px 32px; color:var(--text); font-size:12.5px; outline:none;
+  }
+  .searchbox input:focus{border-color:var(--indigo);}
+  .searchbox .si{position:absolute; left:10px; top:50%; transform:translateY(-50%); font-size:12px; color:var(--sub-2);}
+  .searchbox .clear{position:absolute; right:8px; top:50%; transform:translateY(-50%); font-size:11px; color:var(--sub-2); background:none; border:none; display:none;}
+
+  .navgroup{margin-bottom:6px;}
+  .navgroup-label{font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--sub-2); padding:10px 8px 6px;}
+  .navlink{
+    display:flex; align-items:center; gap:10px; width:100%; text-align:left;
+    padding:8px 10px; border-radius:9px; border:1px solid transparent; background:none; color:var(--sub);
+    font-size:13px; font-weight:500; margin-bottom:2px; transition:background .15s, color .15s;
+  }
+  .navlink .ic{font-size:14px; width:18px; text-align:center; flex-shrink:0;}
+  .navlink:hover{background:var(--card-2); color:var(--text);}
+  .navlink.active{background:linear-gradient(90deg, rgba(244,63,94,.14), rgba(14,165,233,.08)); border-color:var(--border); color:#fff;}
+  .navlink.active .ic{color:var(--red-soft);}
+  .navlink .count{
+    margin-left:auto; font-family:var(--mono); font-size:9.5px; color:var(--sub-2); background:var(--card-3);
+    padding:1px 6px; border-radius:99px;
+  }
+
+  .sidebar-foot{margin-top:20px; padding-top:14px; border-top:1px solid var(--border-soft); font-size:11px; color:var(--sub-2);}
+
+  /* mobile toggle */
+  .mobile-bar{
+    display:none; position:sticky; top:0; z-index:50; align-items:center; gap:10px;
+    background:rgba(8,12,20,.92); backdrop-filter:blur(10px); border-bottom:1px solid var(--border);
+    padding:12px 16px;
+  }
+  .mobile-bar button{
+    background:var(--card); border:1px solid var(--border); color:var(--text); border-radius:9px; padding:7px 10px; font-size:14px;
+  }
+  .mobile-bar .mt{font-weight:700; font-size:13px;}
+  .backdrop{display:none; position:fixed; inset:0; background:rgba(0,0,0,.55); z-index:39;}
+
+  /* ---- Main content ---- */
+  .main{flex:1; min-width:0;}
+  .wrap{max-width:900px; margin:0 auto; padding:0 28px;}
+
+  .hero{padding:56px 0 40px; border-bottom:1px solid var(--border);}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--sub); border:1px solid var(--border); background:var(--card);
+    padding:6px 12px; border-radius:999px;
+  }
+  .eyebrow .dot{width:6px;height:6px;border-radius:50%; background:var(--red); box-shadow:0 0 0 3px rgba(244,63,94,.18); animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+  h1.title{font-size:clamp(26px,4vw,38px); font-weight:800; margin-top:16px; letter-spacing:-0.02em;}
+  .title .red{color:var(--red-soft);}
+  .title .blue{color:var(--blue-soft);}
+  .lede{margin-top:12px; max-width:640px; color:var(--sub); font-size:14.5px;}
+  .hero-stats{display:flex; gap:10px; margin-top:22px; flex-wrap:wrap;}
+  .hstat{
+    border:1px solid var(--border); background:var(--card); border-radius:12px; padding:10px 14px; min-width:110px;
+  }
+  .hstat b{display:block; font-size:18px; font-family:var(--mono); color:var(--text);}
+  .hstat span{font-size:10.5px; color:var(--sub-2);}
+
+  section{padding:50px 0; border-bottom:1px solid var(--border-soft); scroll-margin-top:20px;}
+  section:last-of-type{border-bottom:none;}
+  .sec-head{margin-bottom:26px; display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap;}
+  .sec-tag{font-family:var(--mono); font-size:11px; color:var(--red-soft); letter-spacing:.12em; text-transform:uppercase;}
+  .sec-title{font-size:22px; font-weight:700; margin-top:6px;}
+  .sec-desc{color:var(--sub); font-size:13.5px; margin-top:8px; max-width:620px;}
+  .sec-toggle-all{
+    font-family:var(--mono); font-size:11px; color:var(--indigo); background:var(--card); border:1px solid var(--border);
+    padding:7px 12px; border-radius:9px; white-space:nowrap;
+  }
+  .sec-toggle-all:hover{border-color:var(--indigo);}
+
+  /* ============ ARCHITECTURE (interactive) ============ */
+  .arch{background:var(--card); border:1px solid var(--border); border-radius:20px; padding:28px 18px; overflow-x:auto;}
+  .arch-row{display:flex; justify-content:center; gap:12px; flex-wrap:wrap;}
+  .node{
+    border:1px solid var(--border); background:var(--card-2); border-radius:14px;
+    padding:13px 15px; min-width:140px; text-align:center; position:relative;
+    transition:transform .15s, border-color .15s, box-shadow .15s; color:var(--text);
+  }
+  .node:hover{transform:translateY(-2px); border-color:var(--indigo); box-shadow:0 8px 20px -8px rgba(129,140,248,.4);}
+  .node.selected{border-color:var(--red-soft); box-shadow:0 0 0 3px rgba(244,63,94,.18);}
+  .node .icon{font-size:19px;}
+  .node .label{font-weight:700; font-size:12.5px; margin-top:5px;}
+  .node .sub{font-family:var(--mono); font-size:9.5px; color:var(--sub); margin-top:3px;}
+  .node.center{background:linear-gradient(160deg, rgba(129,140,248,.14), rgba(14,165,233,.08)); border-color:rgba(129,140,248,.45); min-width:210px;}
+  .node.hub{background:linear-gradient(160deg, rgba(251,191,36,.14), rgba(244,63,94,.06)); border-color:rgba(251,191,36,.5); min-width:210px;}
+  .node.red-b{border-color:rgba(244,63,94,.35);}
+  .node.blue-b{border-color:rgba(14,165,233,.35);}
+  .node.amber-b{border-color:rgba(251,191,36,.35);}
+  .node .tap{position:absolute; top:6px; right:8px; font-size:9px; color:var(--sub-2); opacity:.7;}
+  .arrow-v{display:flex; justify-content:center; align-items:center; height:32px; color:var(--sub); font-size:16px; font-family:var(--mono);}
+
+  .detail-panel{
+    margin-top:20px; border:1px solid var(--border); border-radius:16px; background:var(--card-3);
+    padding:0; overflow:hidden; max-height:0; opacity:0; transition:max-height .32s ease, opacity .25s ease, padding .32s ease;
+  }
+  .detail-panel.open{max-height:600px; opacity:1; padding:22px;}
+  .detail-panel .dp-head{display:flex; align-items:center; gap:12px; margin-bottom:12px;}
+  .detail-panel .dp-icon{width:38px;height:38px;border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;}
+  .detail-panel h4{font-size:16px;}
+  .detail-panel .dp-sub{font-family:var(--mono); font-size:10.5px; color:var(--sub-2); margin-top:2px;}
+  .detail-panel p{font-size:13.5px; color:#c7cfe0; margin:0 0 10px;}
+  .detail-panel .chips{display:flex; gap:6px; flex-wrap:wrap; margin-top:12px;}
+  .chip{
+    font-family:var(--mono); font-size:10.5px; color:var(--indigo); background:rgba(129,140,248,.1);
+    border:1px solid rgba(129,140,248,.3); padding:4px 10px; border-radius:99px;
+  }
+  .chip:hover{background:rgba(129,140,248,.2);}
+  .dp-close{margin-left:auto; background:none; border:1px solid var(--border); color:var(--sub); border-radius:8px; width:26px; height:26px; font-size:12px;}
+  .hint-row{display:flex; align-items:center; gap:6px; margin-top:14px; font-size:11px; color:var(--sub-2);}
+
+  /* ============ CONNECTION CARDS (expandable) ============ */
+  .grid-2{display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:14px;}
+  .conn-card{background:var(--card); border:1px solid var(--border); border-radius:16px; overflow:hidden;}
+  .conn-head{display:flex; align-items:center; gap:10px; padding:18px 18px 0;}
+  .conn-card button.conn-toggle{
+    width:100%; text-align:left; background:none; border:none; padding:18px; display:flex; align-items:center; gap:10px; color:var(--text);
+  }
+  .conn-card .ico{width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:15px; flex-shrink:0;}
+  .conn-card h4{font-size:14.5px; font-weight:700;}
+  .conn-card .dir{font-family:var(--mono); font-size:9.5px; color:var(--sub-2); margin-top:3px;}
+  .conn-card .chev{margin-left:auto; color:var(--sub-2); font-size:12px; transition:transform .25s;}
+  .conn-card.open .chev{transform:rotate(180deg);}
+  .conn-body{max-height:0; overflow:hidden; transition:max-height .3s ease;}
+  .conn-body-in{padding:0 18px 18px;}
+  .conn-body-in p{font-size:13px; color:var(--sub); margin:6px 0 10px;}
+  .conn-body-in code{
+    display:block; font-family:var(--mono); font-size:11px; color:var(--indigo);
+    background:#070a12; border:1px solid var(--border); border-radius:8px; padding:8px 10px; overflow-x:auto; white-space:nowrap; margin-bottom:8px;
+  }
+  .ico.fb{background:rgba(251,191,36,.12); color:var(--amber);}
+  .ico.gs{background:rgba(52,211,153,.12); color:var(--emerald);}
+  .ico.dc{background:rgba(129,140,248,.14); color:var(--indigo);}
+  .ico.ai{background:rgba(14,165,233,.14); color:var(--blue-soft);}
+  .ico.ts{background:rgba(244,63,94,.12); color:var(--red-soft);}
+  .ico.cd{background:rgba(230,234,243,.1); color:var(--text);}
+
+  /* ============ WORKFLOW ACCORDIONS ============ */
+  .flow-block{background:var(--card); border:1px solid var(--border); border-radius:18px; margin-bottom:14px; overflow:hidden; scroll-margin-top:90px;}
+  .flow-block.match{border-color:var(--amber); box-shadow:0 0 0 2px rgba(251,191,36,.15);}
+  .flow-head{
+    width:100%; display:flex; align-items:center; gap:14px; padding:20px 22px; background:none; border:none; color:var(--text); text-align:left;
+  }
+  .flow-head .num{
+    font-family:var(--mono); font-weight:700; font-size:13px; color:var(--bg);
+    background:var(--red-soft); width:30px; height:30px; border-radius:9px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+  }
+  .flow-block.blue .flow-head .num{background:var(--blue-soft);}
+  .flow-block.amber .flow-head .num{background:var(--amber);}
+  .flow-block.emerald .flow-head .num{background:var(--emerald);}
+  .flow-head h3{font-size:15.5px; font-weight:700;}
+  .flow-head .tag{font-family:var(--mono); font-size:10px; color:var(--sub); margin-top:2px;}
+  .flow-head .chev{margin-left:auto; color:var(--sub-2); font-size:13px; transition:transform .25s;}
+  .flow-block.open .chev{transform:rotate(180deg);}
+
+  .flow-body{max-height:0; overflow:hidden; transition:max-height .35s ease;}
+  .flow-body-in{padding:0 22px 22px 22px;}
+
+  .steps{list-style:none; margin:0; padding:0; display:flex; flex-direction:column;}
+  .steps li{position:relative; padding:0 0 16px 26px; border-left:1px dashed var(--border); margin-left:5px; font-size:13.5px; color:#c7cfe0;}
+  .steps li:last-child{border-left-color:transparent; padding-bottom:0;}
+  .steps li::before{content:""; position:absolute; left:-4.5px; top:3px; width:8px; height:8px; border-radius:50%; background:var(--red-soft); box-shadow:0 0 0 3px rgba(244,63,94,.15);}
+  .flow-block.blue .steps li::before{background:var(--blue-soft); box-shadow:0 0 0 3px rgba(56,189,248,.15);}
+  .flow-block.amber .steps li::before{background:var(--amber); box-shadow:0 0 0 3px rgba(251,191,36,.15);}
+  .flow-block.emerald .steps li::before{background:var(--emerald); box-shadow:0 0 0 3px rgba(52,211,153,.15);}
+  .steps b{color:var(--text);}
+  .steps .to{display:inline-block; font-family:var(--mono); font-size:10.5px; color:var(--indigo); background:rgba(129,140,248,.1); border:1px solid rgba(129,140,248,.25); padding:1px 8px; border-radius:6px; margin-left:4px; cursor:pointer;}
+  .steps .to:hover{background:rgba(129,140,248,.22);}
+
+  /* ============ DATA TREE (collapsible) ============ */
+  .tree{background:var(--card); border:1px solid var(--border); border-radius:16px; padding:22px; font-family:var(--mono); font-size:12.5px; overflow-x:auto;}
+  .tree .root{color:var(--amber); font-weight:700; display:flex; align-items:center; gap:6px;}
+  .tnode{margin:2px 0;}
+  .tnode > .trow{display:flex; align-items:center; gap:6px; padding:4px 6px; border-radius:6px; cursor:pointer;}
+  .tnode > .trow:hover{background:var(--card-2);}
+  .tnode .tw{color:var(--sub-2); width:12px; display:inline-block; transition:transform .2s; font-size:10px;}
+  .tnode.open > .trow .tw{transform:rotate(90deg);}
+  .tnode .k{color:var(--blue-soft);}
+  .tnode .c{color:var(--sub); font-family:'Sarabun',sans-serif; margin-left:6px; font-size:11.5px;}
+  .tchildren{margin:2px 0 2px 16px; padding-left:14px; border-left:1px dashed var(--border); display:none;}
+  .tnode.open > .tchildren{display:block;}
+  .tleaf{padding:3px 6px; color:#aab4c9;}
+  .tleaf .k{color:var(--emerald);}
+
+  /* ============ NOTES / FAQ ============ */
+  .faq{border:1px solid var(--border); background:var(--card); border-radius:14px; overflow:hidden; margin-bottom:10px;}
+  .faq button{width:100%; text-align:left; background:none; border:none; color:var(--text); padding:16px 18px; display:flex; gap:10px; align-items:center; font-size:13.5px; font-weight:600;}
+  .faq .q-ic{color:var(--red-soft); font-size:13px;}
+  .faq .chev{margin-left:auto; color:var(--sub-2); font-size:12px; transition:transform .25s;}
+  .faq.open .chev{transform:rotate(180deg);}
+  .faq-body{max-height:0; overflow:hidden; transition:max-height .3s ease;}
+  .faq-body-in{padding:0 18px 16px 42px; font-size:13px; color:var(--sub);}
+
+  .note{border:1px solid rgba(251,191,36,.3); background:rgba(251,191,36,.06); border-radius:14px; padding:16px 18px; font-size:13px; color:#e8dcb8; margin-top:20px;}
+
+  .no-match{display:none; color:var(--sub-2); font-size:12.5px; font-family:var(--mono); padding:10px 4px;}
+
+  .back-top{
+    position:fixed; bottom:22px; right:22px; width:42px; height:42px; border-radius:50%;
+    background:var(--card); border:1px solid var(--border); color:var(--text); display:none; align-items:center; justify-content:center;
+    font-size:15px; box-shadow:0 10px 25px -5px rgba(0,0,0,.5); z-index:45;
+  }
+  .back-top.show{display:flex;}
+
+  footer.page-foot{padding:30px 0 60px; font-size:11.5px; color:var(--sub-2); text-align:center;}
+
+  @media(max-width:900px){
+    .sidebar{position:fixed; left:0; top:0; height:100vh; transform:translateX(-100%); transition:transform .25s ease; box-shadow:20px 0 40px rgba(0,0,0,.4);}
+    .sidebar.open{transform:translateX(0);}
+    .mobile-bar{display:flex;}
+    .backdrop.show{display:block;}
+    .wrap{padding:0 18px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">
+      <div class="logo">🛡️</div>
+      <div>
+        <div class="t1">Guild App Workflow</div>
+        <div class="t2">RedDevil / BlueDevil</div>
+      </div>
+    </div>
+
+    <div class="searchbox">
+      <span class="si">🔎</span>
+      <input id="search-input" type="text" placeholder="ค้นหาหัวข้อ เช่น Discord, CP, บอส...">
+      <button class="clear" id="search-clear">✕</button>
+    </div>
+
+    <nav>
+      <div class="navgroup">
+        <button class="navlink" data-target="overview"><span class="ic">🏠</span>ภาพรวม</button>
+        <button class="navlink" data-target="architecture"><span class="ic">🧩</span>สถาปัตยกรรม</button>
+        <button class="navlink" data-target="connections"><span class="ic">🔗</span>จุดเชื่อมต่อภายนอก<span class="count">6</span></button>
+        <button class="navlink" data-target="workflows"><span class="ic">🔄</span>ขั้นตอนการทำงาน<span class="count">7</span></button>
+        <button class="navlink" data-target="datamodel"><span class="ic">🗂️</span>โครงสร้างข้อมูล</button>
+        <button class="navlink" data-target="notes"><span class="ic">❓</span>คำถามที่พบบ่อย</button>
+      </div>
+    </nav>
+
+    <div class="sidebar-foot">
+      คลิกหัวข้อเพื่อเลื่อนไปดู หรือคลิกกล่อง/การ์ดในหน้าเพื่อดูรายละเอียดเพิ่มเติม
+    </div>
+  </aside>
+
+  <div class="backdrop" id="backdrop"></div>
+
+  <!-- ================= MAIN ================= -->
+  <main class="main">
+
+    <div class="mobile-bar">
+      <button id="menu-btn">☰</button>
+      <div class="mt">Guild App Workflow</div>
+    </div>
+
+    <div class="wrap">
+
+      <!-- ================= HERO / OVERVIEW ================= -->
+      <div class="hero" id="overview">
+        <span class="eyebrow"><span class="dot"></span>Interactive System Workflow</span>
+        <h1 class="title">ระบบจัดการคะแนน & เช็คชื่อกิลด์<br><span class="red">RedDevil</span> · <span class="blue">BlueDevil</span></h1>
+        <p class="lede">
+          หน้านี้อธิบายว่าเว็บแอป (ไฟล์ <span class="mono">index.html</span> ไฟล์เดียว รันฝั่ง Browser ทั้งหมด) ทำงานอย่างไร
+          แต่ละโมดูลเชื่อมกับข้อมูลตรงไหน และเชื่อมต่อออกไปยังบริการภายนอกใดบ้าง — <b>คลิกกล่องในไดอะแกรม การ์ด และหัวข้อต่าง ๆ เพื่อดูรายละเอียดเพิ่มได้เลย</b>
+        </p>
+        <div class="hero-stats">
+          <div class="hstat"><b>1</b><span>ฐานข้อมูลกลาง (Firebase)</span></div>
+          <div class="hstat"><b>5</b><span>บริการภายนอกที่เชื่อมต่อ</span></div>
+          <div class="hstat"><b>7</b><span>ขั้นตอนการทำงานหลัก</span></div>
+          <div class="hstat"><b>14</b><span>Data node ใน Firebase</span></div>
+        </div>
+      </div>
+
+      <!-- ================= ARCHITECTURE ================= -->
+      <section id="architecture">
+        <div class="sec-head">
+          <div>
+            <div class="sec-tag">01 · Architecture</div>
+            <div class="sec-title">ภาพรวมสถาปัตยกรรมระบบ</div>
+            <div class="sec-desc">แอปนี้เป็น Single Page App ที่ใช้ <b>Firebase Realtime Database เป็นศูนย์กลาง</b> — ทุกอุปกรณ์ที่เปิดหน้าเว็บจะเชื่อมต่อเข้ากับฐานข้อมูลเดียวกันแบบเรียลไทม์</div>
+          </div>
+        </div>
+
+        <div class="arch">
+          <div class="arch-row">
+            <button class="node red-b" data-node="member"><span class="tap">คลิก ⓘ</span><div class="icon">🙋</div><div class="label">สมาชิกกิลด์</div><div class="sub">Member</div></button>
+            <button class="node amber-b" data-node="admin"><span class="tap">คลิก ⓘ</span><div class="icon">🛡️</div><div class="label">Admin / Boss Admin</div><div class="sub">ผู้ดูแล</div></button>
+            <button class="node blue-b" data-node="superadmin"><span class="tap">คลิก ⓘ</span><div class="icon">👑</div><div class="label">Super Admin</div><div class="sub">สิทธิ์สูงสุด</div></button>
+          </div>
+
+          <div class="arrow-v">↓ เปิดผ่านเบราว์เซอร์ / PWA ↓</div>
+
+          <div class="arch-row">
+            <button class="node center" data-node="client">
+              <span class="tap">คลิก ⓘ</span>
+              <div class="icon">🖥️</div>
+              <div class="label">index.html (Client App)</div>
+              <div class="sub">Tailwind · Firebase SDK · ทุกโมดูลรันในไฟล์เดียว</div>
+            </button>
+          </div>
+
+          <div class="arrow-v" style="color:var(--red-soft);">↕ อ่าน/เขียนแบบเรียลไทม์ ↕</div>
+
+          <div class="arch-row">
+            <button class="node hub" data-node="firebase">
+              <span class="tap">คลิก ⓘ</span>
+              <div class="icon">🔥</div>
+              <div class="label">Firebase Realtime Database</div>
+              <div class="sub">reddevil-f229e · node หลัก: guild_app/*</div>
+            </button>
+          </div>
+
+          <div class="arrow-v">↓ เชื่อมต่อบริการภายนอก ↓</div>
+
+          <div class="arch-row">
+            <button class="node red-b" data-node="discordbot"><span class="tap">คลิก ⓘ</span><div class="icon">🤖</div><div class="label">Discord Bot</div><div class="sub">บริการแยก ฟัง Firebase</div></button>
+            <button class="node amber-b" data-node="sheets"><span class="tap">คลิก ⓘ</span><div class="icon">📊</div><div class="label">Google Apps Script</div><div class="sub">→ Google Sheets</div></button>
+            <button class="node blue-b" data-node="gemini"><span class="tap">คลิก ⓘ</span><div class="icon">✨</div><div class="label">Gemini Vision API</div><div class="sub">OCR / AI แชท</div></button>
+            <button class="node" data-node="tesseract"><span class="tap">คลิก ⓘ</span><div class="icon">🔡</div><div class="label">Tesseract.js</div><div class="sub">OCR สำรอง (client)</div></button>
+          </div>
+
+          <!-- Detail panel -->
+          <div class="detail-panel" id="detail-panel">
+            <div class="dp-head">
+              <div class="dp-icon" id="dp-icon">🔥</div>
+              <div>
+                <h4 id="dp-title">-</h4>
+                <div class="dp-sub" id="dp-sub">-</div>
+              </div>
+              <button class="dp-close" id="dp-close">✕</button>
+            </div>
+            <p id="dp-desc">-</p>
+            <div id="dp-extra"></div>
+            <div class="chips" id="dp-chips"></div>
+          </div>
+          <div class="hint-row" id="hint-row">👆 คลิกกล่องด้านบนกล่องใดก็ได้ เพื่อดูรายละเอียดว่าส่วนนั้นทำหน้าที่อะไร และเชื่อมกับ workflow ไหนบ้าง</div>
+        </div>
+      </section>
+
+      <!-- ================= CONNECTIONS ================= -->
+      <section id="connections">
+        <div class="sec-head">
+          <div>
+            <div class="sec-tag">02 · External Connections</div>
+            <div class="sec-title">เว็บนี้เชื่อมต่อออกไปที่ไหนบ้าง</div>
+            <div class="sec-desc">คลิกที่การ์ดแต่ละใบเพื่อดูรายละเอียดปลายทาง วิธีเชื่อมต่อ และตัวอย่าง endpoint</div>
+          </div>
+          <button class="sec-toggle-all" data-group="conn">ขยายทั้งหมด</button>
+        </div>
+
+        <div class="grid-2" id="conn-list">
+          <div class="conn-card" data-search="firebase realtime database ฐานข้อมูล">
+            <button class="conn-toggle">
+              <div class="ico fb">🔥</div>
+              <div><h4>Firebase Realtime Database</h4><div class="dir">READ + WRITE · REALTIME</div></div>
+              <div class="chev">▾</div>
+            </button>
+            <div class="conn-body"><div class="conn-body-in">
+              <p>ฐานข้อมูลกลางเก็บทุกอย่าง: รายชื่อสมาชิก, คะแนน/เช็คชื่อ, ตั้งค่าบอส, คำขอ CP, คำขออุทธรณ์, บัญชี Admin, ของรางวัล, log การแก้ไข ฯลฯ ทุกจอ sync กันทันทีผ่าน listener (onValue) โดยไม่ต้องรีเฟรชหน้า</p>
+              <code>reddevil-f229e-default-rtdb.asia-southeast1.firebasedatabase.app</code>
+              <p>ใช้ในแทบทุก workflow ของแอป เพราะเป็น "แหล่งความจริง" เดียวที่ทุกโมดูลอ่าน/เขียนร่วมกัน</p>
+            </div></div>
+          </div>
+
+          <div class="conn-card" data-search="google apps script sheets ซิงค์ สำรอง">
+            <button class="conn-toggle">
+              <div class="ico gs">📊</div>
+              <div><h4>Google Apps Script → Sheets</h4><div class="dir">HTTP POST/GET (fetch)</div></div>
+              <div class="chev">▾</div>
+            </button>
+            <div class="conn-body"><div class="conn-body-in">
+              <p>ซิงค์ข้อมูลคะแนน/การล็อกสัปดาห์ไปสำรองไว้ใน Google Sheets เป็น backup ภายนอก ใช้ตอน push คะแนนใหม่, ปิดรอบสัปดาห์, หรือรีเซ็ตรอบ</p>
+              <code>script.google.com/macros/s/AKfycb.../exec</code>
+              <p>เรียกจากฟังก์ชัน <span class="mono" style="color:var(--indigo)">pushToGoogleSheets()</span>, <span class="mono" style="color:var(--indigo)">closeGoogleSheetsCycle()</span> เป็นต้น — เป็น one-way ส่วนใหญ่ (client → sheet)</p>
+            </div></div>
+          </div>
+
+          <div class="conn-card" data-search="discord bot ประกาศ แจ้งเตือน">
+            <button class="conn-toggle">
+              <div class="ico dc">🤖</div>
+              <div><h4>Discord Bot (บริการภายนอก)</h4><div class="dir">ผ่าน Firebase (ไม่เรียกตรง)</div></div>
+              <div class="chev">▾</div>
+            </button>
+            <div class="conn-body"><div class="conn-body-in">
+              <p>หน้าเว็บ <b>ไม่ได้ยิงหา Discord API โดยตรง</b> — มันเขียนคำสั่งลงโหนด <span class="mono" style="color:var(--indigo)">bot_commands/*</span> ใน Firebase แล้วมี Node.js bot ตัวแยก (bot.js) คอยฟังและส่งประกาศ/ซิงค์สมาชิก Discord กลับเข้ามาที่ node <span class="mono" style="color:var(--indigo)">discord_server_members</span></p>
+              <code>guild_app/bot_commands/send_announcement</code>
+              <p>รูปแบบนี้เรียกว่า "command queue pattern" — client เขียนคำสั่ง ส่วน bot อีกตัวคอยเฝ้าดูและทำงานจริงฝั่ง Discord</p>
+            </div></div>
+          </div>
+
+          <div class="conn-card" data-search="gemini vision api ocr ai แชท น้องเดวิล">
+            <button class="conn-toggle">
+              <div class="ico ai">✨</div>
+              <div><h4>Google Gemini API</h4><div class="dir">HTTPS POST (ใช้ API Key ของ Admin)</div></div>
+              <div class="chev">▾</div>
+            </button>
+            <div class="conn-body"><div class="conn-body-in">
+              <p>วิเคราะห์รูปภาพด้วย AI: อ่านสกอร์บอส/ของดรอปจากภาพหน้าจอ, ตรวจรายชื่อคนเข้าร่วมชุมนุมจากภาพ, และเป็นสมองของแชทผู้ช่วย "น้องเดวิล"</p>
+              <code>generativelanguage.googleapis.com/v1beta/models/...</code>
+              <p>API Key เก็บใน <span class="mono" style="color:var(--indigo)">localStorage</span> ของเบราว์เซอร์ Admin เอง ไม่ได้ฝังในโค้ดกลาง</p>
+            </div></div>
+          </div>
+
+          <div class="conn-card" data-search="tesseract ocr สำรอง">
+            <button class="conn-toggle">
+              <div class="ico ts">🔡</div>
+              <div><h4>Tesseract.js (CDN)</h4><div class="dir">ประมวลผลในเบราว์เซอร์</div></div>
+              <div class="chev">▾</div>
+            </button>
+            <div class="conn-body"><div class="conn-body-in">
+              <p>เครื่องมือ OCR สำรองที่รันในเครื่อง ใช้เมื่อยังไม่ตั้งค่า Gemini API Key — อ่านตัวเลข/ชื่อจากภาพสกรีนช็อตแบบไม่ต้องพึ่ง API ภายนอก แม่นยำน้อยกว่า Gemini แต่ใช้งานได้ฟรีทันที</p>
+              <code>cdn.jsdelivr.net/npm/tesseract.js@5</code>
+            </div></div>
+          </div>
+
+          <div class="conn-card" data-search="cdn tailwind font awesome fonts html2canvas">
+            <button class="conn-toggle">
+              <div class="ico cd">📦</div>
+              <div><h4>CDN ไฟล์สาธารณะ</h4><div class="dir">Static assets</div></div>
+              <div class="chev">▾</div>
+            </button>
+            <div class="conn-body"><div class="conn-body-in">
+              <p>โหลดไลบรารีจาก CDN: Tailwind CSS, Font Awesome, Google Fonts, html2canvas (ใช้ export สรุป Top 10 เป็นรูปภาพ), Firebase SDK — เป็นไฟล์ประกอบหน้าเว็บ ไม่มีข้อมูลผู้ใช้ส่งออกไป</p>
+              <code>cdn.tailwindcss.com · cdnjs.cloudflare.com · fonts.googleapis.com</code>
+            </div></div>
+          </div>
+        </div>
+        <div class="no-match" data-group="conn">ไม่พบผลลัพธ์ที่ตรงกับคำค้นหา</div>
+      </section>
+
+      <!-- ================= WORKFLOWS ================= -->
+      <section id="workflows">
+        <div class="sec-head">
+          <div>
+            <div class="sec-tag">03 · Workflows</div>
+            <div class="sec-title">ขั้นตอนการทำงานของแต่ละโมดูลหลัก</div>
+            <div class="sec-desc">คลิกหัวข้อแต่ละอันเพื่อขยาย/ย่อดูลำดับขั้นตอนแบบละเอียด</div>
+          </div>
+          <button class="sec-toggle-all" data-group="flow">ย่อทั้งหมด</button>
+        </div>
+
+        <div id="flow-list">
+          <!-- 1 -->
+          <div class="flow-block open" id="wf-1" data-search="login สิทธิ์ admin super admin pin เข้าสู่ระบบ">
+            <button class="flow-head"><div class="num">1</div><div><h3>เข้าสู่ระบบ & สิทธิ์การใช้งาน</h3><div class="tag">Login & Role-based Access</div></div><div class="chev">▾</div></button>
+            <div class="flow-body"><div class="flow-body-in">
+              <ul class="steps">
+                <li>ผู้ใช้เปิดเว็บ → ระบบตรวจ <span class="mono" style="color:#c7cfe0">localStorage</span> ว่าเคยล็อกอิน Admin ค้างไว้หรือไม่</li>
+                <li>ถ้าเป็น <b>Admin</b>: กรอกอีเมล+รหัสผ่าน → เทียบกับ node <span class="mono">admin_accounts</span> ใน Firebase (ไม่ใช้ Firebase Authentication แต่ตรวจรหัสผ่านเอง) <span class="to" data-node="firebase">→ Firebase</span></li>
+                <li>ระบบตรวจ role: <b>Super Admin</b> / <b>Admin</b> / <b>Boss Admin</b> เพื่อกำหนดสิทธิ์และเมนูที่มองเห็น</li>
+                <li>ผู้ที่ยังไม่ใช่ Admin กด "ขอสมัครเป็น Admin" → บันทึกคำขอที่ <span class="mono">pending_admins</span> ให้ Super Admin อนุมัติ</li>
+                <li>สมาชิกทั่วไปยืนยันตัวตนด้วย <b>PIN 4 หลัก</b> ต่อตัวละคร (เก็บที่ <span class="mono">member_pins</span>) สำหรับทำรายการที่ต้องยืนยันตัวตน</li>
+              </ul>
+            </div></div>
+          </div>
+
+          <!-- 2 -->
+          <div class="flow-block blue" id="wf-2" data-search="เช็คชื่อ คะแนน attendance scoring กิจกรรม">
+            <button class="flow-head"><div class="num">2</div><div><h3>เช็คชื่อกิจกรรม & คำนวณคะแนน</h3><div class="tag">Attendance & Scoring</div></div><div class="chev">▾</div></button>
+            <div class="flow-body"><div class="flow-body-in">
+              <ul class="steps">
+                <li>Admin เปิดตารางกิจกรรมประจำสัปดาห์ → ติ๊กชื่อสมาชิกที่เข้าร่วมแต่ละกิจกรรม (รายคนหรือติ๊กทั้งกิลด์พร้อมกัน)</li>
+                <li>ทุกการติ๊ก <b>เขียนสดเข้า Firebase ทันที</b> ที่ <span class="mono">members_data</span> / <span class="mono">weekly_history</span> <span class="to" data-node="firebase">→ Firebase</span> → หน้าจอทุกคนอัปเดตพร้อมกันแบบเรียลไทม์</li>
+                <li>คะแนนรวมและแดชบอร์ดสรุปด้านบนคำนวณใหม่อัตโนมัติจากข้อมูลที่เปลี่ยน</li>
+                <li>ทุกการแก้ไขถูกบันทึกลง <span class="mono">audit_logs</span> เพื่อดูย้อนหลังได้ว่าใครแก้อะไรเมื่อไหร่</li>
+                <li>เมื่อจบสัปดาห์ Admin กด "ปิดรอบสัปดาห์" → ล็อกข้อมูล (<span class="mono">locked_weeks</span>) และซิงค์สรุปไป Google Sheets <span class="to" data-node="sheets">→ Google Sheets</span></li>
+              </ul>
+            </div></div>
+          </div>
+
+          <!-- 3 -->
+          <div class="flow-block amber" id="wf-3" data-search="บอส boss timer ocr สแกน ของดรอป gemini tesseract">
+            <button class="flow-head"><div class="num">3</div><div><h3>บอสไทม์เมอร์ & สแกนของดรอปด้วย AI</h3><div class="tag">Boss Timer + Vision OCR</div></div><div class="chev">▾</div></button>
+            <div class="flow-body"><div class="flow-body-in">
+              <ul class="steps">
+                <li>ระบบแสดงนาฬิกานับถอยหลังของบอสแต่ละตัว โดยคำนวณจากเวลาตายล่าสุดที่บันทึกไว้ใน <span class="mono">activities_data</span></li>
+                <li>เมื่อบอสตาย Admin แนบ <b>สกรีนช็อตของดรอป</b> → ระบบส่งภาพไปให้ AI วิเคราะห์: ถ้ามี Gemini API Key จะยิงไปที่ Gemini Vision <span class="to" data-node="gemini">→ Gemini API</span>, ถ้าไม่มีจะใช้ Tesseract.js แทน <span class="to" data-node="tesseract">→ Tesseract.js</span></li>
+                <li>AI อ่านชื่อไอเทม/ผู้รับของออกมาเป็นข้อมูล → ขึ้นหน้าต่างให้ Admin ตรวจทานก่อนกดยืนยัน</li>
+                <li>เมื่อยืนยันแล้ว บันทึกเวลาตายและของดรอปกลับเข้า Firebase → ตั้งเวลานับถอยหลังรอบใหม่โดยอัตโนมัติ</li>
+                <li>ฟีเจอร์เดียวกันนี้ใช้สแกนภาพ "รายชื่อคนเข้าร่วมชุมนุม" เพื่อติ๊กชื่อกิจกรรมแบบอัตโนมัติ</li>
+              </ul>
+            </div></div>
+          </div>
+
+          <!-- 4 -->
+          <div class="flow-block" id="wf-4" data-search="cp อุทธรณ์ แก้ไขข้อมูล approval อนุมัติ pending">
+            <button class="flow-head"><div class="num">4</div><div><h3>คำขอที่ต้องรออนุมัติ (CP / อุทธรณ์ / แก้ไขข้อมูล)</h3><div class="tag">Approval Queue Pattern</div></div><div class="chev">▾</div></button>
+            <div class="flow-body"><div class="flow-body-in">
+              <ul class="steps">
+                <li>สมาชิกยื่นคำขอ 3 ประเภทได้เอง: <b>ขอปรับค่า CP</b> (<span class="mono">pending_cp</span>), <b>อุทธรณ์การเช็คชื่อ</b> (<span class="mono">attendance_appeals</span>), <b>ขอแก้ข้อมูลตัวละคร</b> (<span class="mono">char_edit_requests</span>)</li>
+                <li>คำขอทั้งหมดถูกเขียนลง node "pending" ของ Firebase ก่อน ยังไม่มีผลกับข้อมูลจริง <span class="to" data-node="firebase">→ Firebase</span></li>
+                <li>Admin เห็นแจ้งเตือนคำขอค้าง → เปิดหน้าต่างพิจารณา อนุมัติหรือปฏิเสธพร้อมระบุเหตุผล</li>
+                <li>เมื่ออนุมัติ ระบบย้ายข้อมูลจาก node pending เข้าไปอัปเดต <span class="mono">members_data</span> จริง แล้วลบออกจากคิว</li>
+                <li>ทุกการตัดสินใจถูกบันทึกใน <span class="mono">audit_logs</span> เพื่อความโปร่งใส</li>
+              </ul>
+            </div></div>
+          </div>
+
+          <!-- 5 -->
+          <div class="flow-block emerald" id="wf-5" data-search="ร้านค้า ของรางวัล reward store แลก">
+            <button class="flow-head"><div class="num">5</div><div><h3>ร้านค้าของรางวัลกิลด์</h3><div class="tag">Reward Store</div></div><div class="chev">▾</div></button>
+            <div class="flow-body"><div class="flow-body-in">
+              <ul class="steps">
+                <li>Admin เพิ่มของรางวัลเข้าคลัง (<span class="mono">reward_store_items</span>) พร้อมจำนวนคะแนนที่ต้องใช้แลก</li>
+                <li>สมาชิกดูแคตตาล็อก → กดแลกของรางวัล → ระบบตรวจคะแนนคงเหลือก่อนสร้างคำขอแลก</li>
+                <li>คำขอแลกเข้าคิวให้ Admin อนุมัติและจัดการส่งมอบจริง บันทึกไว้ที่ <span class="mono">reward_store_logs</span></li>
+                <li>เมื่ออนุมัติ ระบบตัดคะแนนของสมาชิกคนนั้นออกจากยอดสะสมใน Firebase</li>
+              </ul>
+            </div></div>
+          </div>
+
+          <!-- 6 -->
+          <div class="flow-block" id="wf-6" data-search="ai แชท น้องเดวิล assistant discord ประกาศ">
+            <button class="flow-head"><div class="num">6</div><div><h3>ผู้ช่วย AI "น้องเดวิล"</h3><div class="tag">Floating AI Assistant</div></div><div class="chev">▾</div></button>
+            <div class="flow-body"><div class="flow-body-in">
+              <ul class="steps">
+                <li>แชทลอยมุมจอ ผู้ใช้พิมพ์คำถามหรือแนบรูป → ส่ง prompt พร้อมข้อมูลกิลด์ไปให้ Gemini <span class="to" data-node="gemini">→ Gemini API</span></li>
+                <li>มีปุ่มคำถามลัด เช่น "ของดรอปล่าสุด", "บอสใกล้เกิด", "สรุปยอดปันผล", "เช็คคนขาดกิจกรรม"</li>
+                <li>เมื่อ AI ร่างประกาศกิลด์วอร์เสร็จ Admin กดปุ่ม "ส่งเข้า Discord" → ระบบเขียนคำสั่งลง <span class="mono">bot_commands/send_announcement</span> ใน Firebase</li>
+                <li>Discord Bot ที่ฟังอยู่ตลอดเวลาจะหยิบคำสั่งนี้ไปโพสต์ลงห้องประกาศ Discord จริง <span class="to" data-node="discordbot">→ Discord Bot</span></li>
+                <li>ไอเดีย/ปัญหาที่คุยกับ AI สามารถบันทึกลง "สมุดบันทึกแอดมิน" (<span class="mono">nong_devil_feedback_logs</span>) เพื่อดูย้อนหลัง</li>
+              </ul>
+            </div></div>
+          </div>
+
+          <!-- 7 -->
+          <div class="flow-block blue" id="wf-7" data-search="อัปเดต auto update version">
+            <button class="flow-head"><div class="num">7</div><div><h3>ระบบแจ้งเตือนอัปเดตอัตโนมัติ</h3><div class="tag">Auto-update Checker</div></div><div class="chev">▾</div></button>
+            <div class="flow-body"><div class="flow-body-in">
+              <ul class="steps">
+                <li>ทุก 3 นาที (และเมื่อสลับกลับมาที่แท็บ) เบราว์เซอร์จะ fetch ไฟล์ <span class="mono">version.json</span> จากโฮสต์เดียวกัน</li>
+                <li>เทียบค่า <span class="mono">buildTime</span> กับเวอร์ชันที่โหลดไว้ตอนแรก</li>
+                <li>ถ้าพบว่ามีเวอร์ชันใหม่กว่า → ขึ้นแบนเนอร์แจ้งเตือนพร้อมนับถอยหลัง 5 วินาที แล้วรีโหลดหน้าอัตโนมัติ เพื่อให้ทุกคนใช้โค้ดเวอร์ชันล่าสุดตรงกัน</li>
+              </ul>
+            </div></div>
+          </div>
+        </div>
+        <div class="no-match" data-group="flow">ไม่พบผลลัพธ์ที่ตรงกับคำค้นหา</div>
+      </section>
+
+      <!-- ================= DATA MODEL ================= -->
+      <section id="datamodel">
+        <div class="sec-head">
+          <div>
+            <div class="sec-tag">04 · Data Model</div>
+            <div class="sec-title">โครงสร้างข้อมูลหลักใน Firebase</div>
+            <div class="sec-desc">คลิกที่แต่ละบรรทัดเพื่อดูคำอธิบาย ทุกอย่างอยู่ใต้ node เดียว <span class="mono" style="color:var(--indigo)">guild_app/</span></div>
+          </div>
+        </div>
+        <div class="tree">
+          <div class="root">📁 guild_app/</div>
+          <div id="tree-root"></div>
+        </div>
+      </section>
+
+      <!-- ================= FAQ / NOTES ================= -->
+      <section id="notes">
+        <div class="sec-head">
+          <div>
+            <div class="sec-tag">05 · Notes</div>
+            <div class="sec-title">คำถามที่พบบ่อย</div>
+          </div>
+        </div>
+
+        <div class="faq">
+          <button class="faq-toggle"><span class="q-ic">❓</span>เว็บนี้มีเซิร์ฟเวอร์ backend ของตัวเองไหม<div class="chev">▾</div></button>
+          <div class="faq-body"><div class="faq-body-in">ไม่มี — เป็นไฟล์ HTML/JS ไฟล์เดียวที่รันบนเบราว์เซอร์ผู้ใช้ทั้งหมด (Client-side only) โดยใช้ Firebase Realtime Database เป็นฐานข้อมูลกลางแทนเซิร์ฟเวอร์ของตัวเอง</div></div>
+        </div>
+        <div class="faq">
+          <button class="faq-toggle"><span class="q-ic">❓</span>ทำไมประกาศ Discord ถึงไม่ได้ยิง API ตรง</button>
+          <div class="faq-body"><div class="faq-body-in">เพราะ Discord Bot token ต้องเก็บเป็นความลับฝั่งเซิร์ฟเวอร์ ไม่ควรฝังไว้ในโค้ดฝั่ง client ที่ทุกคนเห็นได้ จึงใช้ Firebase เป็นตัวกลางส่งคำสั่งให้บอทแยกต่างหาก (bot.js) ทำงานแทน</div></div>
+        </div>
+        <div class="faq">
+          <button class="faq-toggle"><span class="q-ic">❓</span>ข้อมูลปลอดภัยแค่ไหน เพราะไม่มี backend</button>
+          <div class="faq-body"><div class="faq-body-in">ความปลอดภัยขึ้นอยู่กับ Firebase Security Rules ที่ตั้งค่าไว้ในโปรเจกต์ ต้องตรวจสอบให้แน่ใจว่ากำหนดสิทธิ์อ่าน/เขียนของแต่ละ node อย่างเหมาะสม เพราะ client เชื่อมตรงกับฐานข้อมูลโดยไม่มี backend คั่นกลางตรวจสอบสิทธิ์อีกชั้น</div></div>
+        </div>
+        <div class="faq">
+          <button class="faq-toggle"><span class="q-ic">❓</span>ถ้า Gemini API Key หมดอายุหรือไม่ได้ตั้งค่าจะเกิดอะไรขึ้น</button>
+          <div class="faq-body"><div class="faq-body-in">ระบบจะสลับไปใช้ Tesseract.js เป็น OCR สำรองโดยอัตโนมัติ (แม่นยำน้อยกว่าแต่ยังใช้งานได้) ส่วนฟีเจอร์แชท AI "น้องเดวิล" จะใช้งานไม่ได้จนกว่าจะตั้งค่า API Key ใหม่</div></div>
+        </div>
+
+        <div class="note">
+          💡 <b>สรุปสั้น ๆ:</b> Firebase Realtime Database ทำหน้าที่เป็นทั้งฐานข้อมูลและ "ตัวกลางส่งข้อความ" ระหว่างหน้าเว็บกับ Discord Bot
+          ส่วน Google Sheets ใช้เป็นที่สำรองข้อมูล และ Gemini/Tesseract ใช้เฉพาะตอนต้องอ่านข้อมูลจากรูปภาพเท่านั้น
+        </div>
+      </section>
+
+      <footer class="page-foot">Guild App Workflow Viewer · สร้างจากการอ่านโค้ด index.html ของระบบจริง</footer>
+    </div>
+  </main>
+</div>
+
+<button class="back-top" id="back-top">↑</button>
+
+<script>
+/* ============================================================
+   DATA
+============================================================ */
+const nodeDetails = {
+  member: {
+    icon:'🙋', color:'red-soft', title:'สมาชิกกิลด์', sub:'End user · Member',
+    desc:'ผู้เล่นทั่วไปในกิลด์ ใช้เว็บดูคะแนนตัวเอง เช็คตารางบอส ยื่นคำขอปรับ CP/อุทธรณ์ และแลกของรางวัล ไม่มีสิทธิ์แก้ไขข้อมูลของคนอื่นโดยตรง ต้องยืนยันตัวตนด้วย PIN 4 หลักสำหรับบางรายการ',
+    related:[{label:'Workflow 1 · Login',id:'wf-1'},{label:'Workflow 4 · คำขออนุมัติ',id:'wf-4'},{label:'Workflow 5 · ร้านค้า',id:'wf-5'}]
+  },
+  admin:{
+    icon:'🛡️', title:'Admin / Boss Admin', sub:'Guild Staff',
+    desc:'ผู้ดูแลกิลด์ ติ๊กเช็คชื่อ คำนวณคะแนน จัดการบอส อนุมัติคำขอต่าง ๆ และส่งประกาศเข้า Discord "Boss Admin" คือสิทธิ์ย่อยที่โฟกัสเฉพาะโมดูลบอสไทม์เมอร์',
+    related:[{label:'Workflow 2 · เช็คชื่อ',id:'wf-2'},{label:'Workflow 3 · บอส',id:'wf-3'},{label:'Workflow 4 · อนุมัติคำขอ',id:'wf-4'},{label:'Workflow 6 · AI ผู้ช่วย',id:'wf-6'}]
+  },
+  superadmin:{
+    icon:'👑', title:'Super Admin', sub:'สิทธิ์สูงสุดของระบบ',
+    desc:'มีสิทธิ์ทุกอย่างของ Admin บวกการอนุมัติ Admin คนใหม่ จัดการกิลด์ (rename/สร้าง) และเข้าถึงการตั้งค่าระบบระดับลึก เช่น Discord Webhook และ Google Sheets Sync',
+    related:[{label:'Workflow 1 · Login',id:'wf-1'}]
+  },
+  client:{
+    icon:'🖥️', title:'index.html (Client App)', sub:'Single Page Application',
+    desc:'หัวใจของระบบทั้งหมดอยู่ในไฟล์เดียว ใช้ Tailwind CSS สำหรับ UI, Firebase SDK (compat) สำหรับเชื่อมฐานข้อมูล ทุกโมดูล (เช็คชื่อ, บอสไทม์เมอร์, AI แชท ฯลฯ) เป็น JavaScript function ในไฟล์นี้ทั้งหมด ไม่มีการแยก build process',
+    related:[{label:'ดูทุก Workflow',id:'workflows'}]
+  },
+  firebase:{
+    icon:'🔥', title:'Firebase Realtime Database', sub:'reddevil-f229e · asia-southeast1',
+    desc:'ฐานข้อมูลกลางที่ทำหน้าที่ 2 อย่าง: (1) เก็บข้อมูลกิลด์ทั้งหมดใต้ node guild_app/ และ (2) เป็น "ตัวกลาง" ส่งคำสั่งระหว่างเว็บกับ Discord Bot ผ่าน bot_commands/* — ทุกไคลเอนต์ subscribe แบบเรียลไทม์จึงเห็นข้อมูลอัปเดตพร้อมกันทันที',
+    related:[{label:'ดูโครงสร้างข้อมูล',id:'datamodel'},{label:'Workflow 2 · เช็คชื่อ',id:'wf-2'},{label:'Workflow 4 · อนุมัติคำขอ',id:'wf-4'}]
+  },
+  discordbot:{
+    icon:'🤖', title:'Discord Bot (bot.js)', sub:'บริการภายนอก แยกจาก index.html',
+    desc:'เป็น Node.js process ที่รันแยกต่างหาก (ไม่ได้อยู่ในไฟล์ index.html) คอยฟังโหนด guild_app/bot_commands/* ใน Firebase เมื่อมีคำสั่งใหม่ บอทจะโพสต์ประกาศเข้าห้อง Discord ที่กำหนด และซิงค์ข้อมูลสมาชิก Discord กลับเข้า Firebase ที่ node discord_server_members',
+    related:[{label:'Workflow 6 · AI ผู้ช่วย',id:'wf-6'}]
+  },
+  sheets:{
+    icon:'📊', title:'Google Apps Script → Sheets', sub:'Backup / Export',
+    desc:'Web App ที่เขียนด้วย Google Apps Script ทำหน้าที่รับข้อมูลจาก client แล้วเขียนลง Google Sheets เพื่อสำรองข้อมูลคะแนนไว้ภายนอก Firebase เผื่อกรณีต้องการดูสรุปแบบตารางหรือ export',
+    related:[{label:'Workflow 2 · เช็คชื่อ & ปิดสัปดาห์',id:'wf-2'}]
+  },
+  gemini:{
+    icon:'✨', title:'Google Gemini Vision API', sub:'AI Model · ใช้ API Key ของ Admin',
+    desc:'โมเดล AI จาก Google ใช้วิเคราะห์ภาพ (สกรีนช็อตของดรอปบอส, ภาพรายชื่อผู้เข้าร่วม) และเป็นสมองของแชทบอท "น้องเดวิล" API Key เก็บไว้ใน localStorage ของเบราว์เซอร์ Admin แต่ละคนเอง',
+    related:[{label:'Workflow 3 · บอส & OCR',id:'wf-3'},{label:'Workflow 6 · AI ผู้ช่วย',id:'wf-6'}]
+  },
+  tesseract:{
+    icon:'🔡', title:'Tesseract.js', sub:'Client-side OCR (fallback)',
+    desc:'ไลบรารี OCR ที่รันในเบราว์เซอร์โดยตรง ไม่ต้องพึ่ง API ภายนอก ใช้เป็นตัวสำรองเมื่อไม่มีการตั้งค่า Gemini API Key — แม่นยำน้อยกว่า Gemini แต่ใช้งานได้ทันทีไม่มีค่าใช้จ่าย',
+    related:[{label:'Workflow 3 · บอส & OCR',id:'wf-3'}]
+  }
+};
+
+const treeData = [
+  {k:'members_data', c:'ข้อมูลสมาชิก คะแนน CP ตัวละคร', leaf:true},
+  {k:'guilds_list', c:'รายชื่อกิลด์ (BlueDevil / RedDevil)', leaf:true},
+  {k:'activities_data', c:'กิจกรรม/บอส ที่ใช้เช็คชื่อ', leaf:true},
+  {k:'weekly_history', c:'ประวัติคะแนนรายสัปดาห์', children:[
+    {k:'week_names', c:'ชื่อสัปดาห์ที่ตั้งเอง'},
+    {k:'cycle_history', c:'ประวัติแต่ละรอบ (cycle)'},
+    {k:'locked_weeks', c:'สัปดาห์ที่ปิดรอบแล้ว'}
+  ]},
+  {k:'admin_accounts', c:'บัญชีผู้ดูแลระบบ', children:[
+    {k:'pending_admins', c:'คำขอสมัครเป็น Admin ที่รออนุมัติ'}
+  ]},
+  {k:'member_pins', c:'รหัส PIN ยืนยันตัวตนสมาชิก', leaf:true},
+  {k:'pending_cp', c:'คำขอปรับค่า CP ที่รออนุมัติ', leaf:true},
+  {k:'attendance_appeals', c:'คำขออุทธรณ์การเช็คชื่อ', leaf:true},
+  {k:'char_edit_requests', c:'คำขอแก้ไขข้อมูลตัวละคร', leaf:true},
+  {k:'reward_store_items', c:'รายการของรางวัลในคลัง', children:[
+    {k:'reward_store_logs', c:'ประวัติการแลกของรางวัล'}
+  ]},
+  {k:'audit_logs', c:'ประวัติการแก้ไขข้อมูลทั้งหมด', leaf:true},
+  {k:'nong_devil_feedback_logs', c:'บันทึกจากแชท AI น้องเดวิล', leaf:true},
+  {k:'bot_commands', c:'คิวคำสั่งส่งให้ Discord Bot', children:[
+    {k:'send_announcement', c:'สั่งให้บอทโพสต์ประกาศ'},
+    {k:'sync_trigger', c:'สั่งให้บอทซิงค์ข้อมูลสมาชิก'}
+  ]},
+  {k:'bot_status', c:'สถานะออนไลน์ของ Discord Bot', leaf:true},
+  {k:'discord_server_members', c:'ข้อมูลสมาชิกจากฝั่ง Discord', leaf:true},
+  {k:'registered_members', c:'สมาชิกที่ลงทะเบียนผ่าน Discord', leaf:true},
+  {k:'guild_join_requests', c:'คำขอเข้าร่วมกิลด์', leaf:true},
+  {k:'presence', c:'ใครออนไลน์อยู่ตอนนี้ (.info/connected)', leaf:true}
+];
+
+/* ============================================================
+   BUILD DATA TREE
+============================================================ */
+function buildTree(container, items){
+  items.forEach(item=>{
+    if(item.children){
+      const node = document.createElement('div');
+      node.className = 'tnode';
+      node.innerHTML = `<div class="trow"><span class="tw">▶</span><span class="k">${item.k}</span><span class="c">${item.c}</span></div>`;
+      const childWrap = document.createElement('div');
+      childWrap.className = 'tchildren';
+      buildTree(childWrap, item.children);
+      node.appendChild(childWrap);
+      node.querySelector('.trow').addEventListener('click', ()=> node.classList.toggle('open'));
+      container.appendChild(node);
+    } else {
+      const leaf = document.createElement('div');
+      leaf.className = 'tleaf';
+      leaf.innerHTML = `<span class="k">${item.k}</span><span class="c">${item.c}</span>`;
+      container.appendChild(leaf);
+    }
+  });
+}
+buildTree(document.getElementById('tree-root'), treeData);
+
+/* ============================================================
+   ARCHITECTURE NODE DETAIL PANEL
+============================================================ */
+const panel = document.getElementById('detail-panel');
+const hintRow = document.getElementById('hint-row');
+let currentNode = null;
+
+document.querySelectorAll('.node[data-node]').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    const key = btn.dataset.node;
+    if(currentNode === key && panel.classList.contains('open')){
+      closePanel();
+      return;
+    }
+    openPanel(key, btn);
+  });
+});
+
+function openPanel(key, btn){
+  const d = nodeDetails[key];
+  if(!d) return;
+  document.querySelectorAll('.node').forEach(n=>n.classList.remove('selected'));
+  btn.classList.add('selected');
+  currentNode = key;
+
+  document.getElementById('dp-icon').textContent = d.icon;
+  document.getElementById('dp-title').textContent = d.title;
+  document.getElementById('dp-sub').textContent = d.sub;
+  document.getElementById('dp-desc').textContent = d.desc;
+
+  const chipsWrap = document.getElementById('dp-chips');
+  chipsWrap.innerHTML = '';
+  (d.related||[]).forEach(r=>{
+    const c = document.createElement('button');
+    c.className = 'chip';
+    c.textContent = r.label;
+    c.addEventListener('click', ()=>{
+      const target = document.getElementById(r.id);
+      if(target){
+        if(target.classList.contains('flow-block') && !target.classList.contains('open')){
+          toggleFlow(target);
+        }
+        target.scrollIntoView({behavior:'smooth', block:'center'});
+        target.classList.add('match');
+        setTimeout(()=>target.classList.remove('match'), 1600);
+      }
+    });
+    chipsWrap.appendChild(c);
+  });
+
+  panel.classList.add('open');
+  hintRow.style.display = 'none';
+}
+function closePanel(){
+  panel.classList.remove('open');
+  document.querySelectorAll('.node').forEach(n=>n.classList.remove('selected'));
+  currentNode = null;
+  hintRow.style.display = 'flex';
+}
+document.getElementById('dp-close').addEventListener('click', closePanel);
+
+/* ============================================================
+   CONNECTION CARDS TOGGLE
+============================================================ */
+document.querySelectorAll('.conn-card').forEach(card=>{
+  const btn = card.querySelector('.conn-toggle');
+  const body = card.querySelector('.conn-body');
+  btn.addEventListener('click', ()=>{
+    const isOpen = card.classList.contains('open');
+    if(isOpen){
+      card.classList.remove('open');
+      body.style.maxHeight = null;
+    } else {
+      card.classList.add('open');
+      body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  });
+});
+document.querySelector('[data-group="conn"].sec-toggle-all').addEventListener('click', function(){
+  const allOpen = this.textContent.includes('ย่อ');
+  document.querySelectorAll('.conn-card').forEach(card=>{
+    const body = card.querySelector('.conn-body');
+    if(allOpen){
+      card.classList.remove('open'); body.style.maxHeight = null;
+    } else {
+      card.classList.add('open'); body.style.maxHeight = body.scrollHeight + 'px';
+    }
+  });
+  this.textContent = allOpen ? 'ขยายทั้งหมด' : 'ย่อทั้งหมด';
+});
+
+/* ============================================================
+   WORKFLOW ACCORDIONS
+============================================================ */
+function toggleFlow(block, forceOpen){
+  const body = block.querySelector('.flow-body');
+  const shouldOpen = forceOpen !== undefined ? forceOpen : !block.classList.contains('open');
+  if(shouldOpen){
+    block.classList.add('open');
+    body.style.maxHeight = body.scrollHeight + 'px';
+  } else {
+    block.classList.remove('open');
+    body.style.maxHeight = null;
+  }
+}
+document.querySelectorAll('.flow-block').forEach(block=>{
+  const head = block.querySelector('.flow-head');
+  head.addEventListener('click', ()=> toggleFlow(block));
+  if(block.classList.contains('open')){
+    const body = block.querySelector('.flow-body');
+    body.style.maxHeight = body.scrollHeight + 'px';
+  }
+});
+document.querySelector('[data-group="flow"].sec-toggle-all').addEventListener('click', function(){
+  const collapseAll = this.textContent.includes('ย่อ');
+  document.querySelectorAll('.flow-block').forEach(block=> toggleFlow(block, !collapseAll));
+  this.textContent = collapseAll ? 'ขยายทั้งหมด' : 'ย่อทั้งหมด';
+});
+
+/* ============================================================
+   FAQ TOGGLE
+============================================================ */
+document.querySelectorAll('.faq').forEach(f=>{
+  const btn = f.querySelector('.faq-toggle');
+  const body = f.querySelector('.faq-body');
+  btn.addEventListener('click', ()=>{
+    const isOpen = f.classList.contains('open');
+    if(isOpen){ f.classList.remove('open'); body.style.maxHeight = null; }
+    else{ f.classList.add('open'); body.style.maxHeight = body.scrollHeight + 'px'; }
+  });
+});
+
+/* ============================================================
+   SIDEBAR NAV — active highlighting + click scroll
+============================================================ */
+const navlinks = document.querySelectorAll('.navlink');
+const sections = ['overview','architecture','connections','workflows','datamodel','notes'].map(id=>document.getElementById(id));
+
+navlinks.forEach(link=>{
+  link.addEventListener('click', ()=>{
+    const target = document.getElementById(link.dataset.target);
+    if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+    closeSidebarMobile();
+  });
+});
+
+const observer = new IntersectionObserver((entries)=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting){
+      navlinks.forEach(l=>l.classList.remove('active'));
+      const active = document.querySelector(`.navlink[data-target="${entry.target.id}"]`);
+      if(active) active.classList.add('active');
+    }
+  });
+}, {rootMargin:'-20% 0px -70% 0px'});
+sections.forEach(s=> s && observer.observe(s));
+
+/* ============================================================
+   MOBILE SIDEBAR TOGGLE
+============================================================ */
+const sidebar = document.getElementById('sidebar');
+const backdrop = document.getElementById('backdrop');
+document.getElementById('menu-btn').addEventListener('click', ()=>{
+  sidebar.classList.add('open'); backdrop.classList.add('show');
+});
+backdrop.addEventListener('click', closeSidebarMobile);
+function closeSidebarMobile(){
+  sidebar.classList.remove('open'); backdrop.classList.remove('show');
+}
+
+/* ============================================================
+   SEARCH FILTER
+============================================================ */
+const searchInput = document.getElementById('search-input');
+const searchClear = document.getElementById('search-clear');
+searchInput.addEventListener('input', ()=>{
+  const q = searchInput.value.trim().toLowerCase();
+  searchClear.style.display = q ? 'block' : 'none';
+
+  let connMatches = 0, flowMatches = 0;
+  document.querySelectorAll('.conn-card').forEach(card=>{
+    const hit = !q || (card.dataset.search||'').includes(q) || card.textContent.toLowerCase().includes(q);
+    card.style.display = hit ? '' : 'none';
+    if(hit) connMatches++;
+  });
+  document.querySelectorAll('.flow-block').forEach(block=>{
+    const hit = !q || (block.dataset.search||'').includes(q) || block.textContent.toLowerCase().includes(q);
+    block.style.display = hit ? '' : 'none';
+    if(hit){
+      flowMatches++;
+      if(q){ toggleFlow(block, true); }
+    }
+  });
+  document.querySelector('.no-match[data-group="conn"]').style.display = connMatches===0 ? 'block':'none';
+  document.querySelector('.no-match[data-group="flow"]').style.display = flowMatches===0 ? 'block':'none';
+});
+searchClear.addEventListener('click', ()=>{
+  searchInput.value=''; searchInput.dispatchEvent(new Event('input')); searchInput.focus();
+});
+
+/* ============================================================
+   BACK TO TOP
+============================================================ */
+const backTop = document.getElementById('back-top');
+window.addEventListener('scroll', ()=>{
+  backTop.classList.toggle('show', window.scrollY > 500);
+});
+backTop.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+</script>
+</body>
+</html>
